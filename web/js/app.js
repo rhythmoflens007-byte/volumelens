@@ -427,7 +427,6 @@
   });
   new ResizeObserver(() => requestAnimationFrame(placeLegends)).observe($('vol-wrap'));
 
-  window.__vl = { timeChart, volChart, state };
   try { state.theme = localStorage.getItem('vl-theme') || 'dark'; } catch (e) { state.theme = 'dark'; }
   applyTheme();
   init();
