@@ -1,0 +1,735 @@
+{
+ "generated": "2026-09-28 22:37",
+ "stocks": [
+  {
+   "symbol": "NARMADA",
+   "dates": [
+    {
+     "date": "2026-06-12",
+     "alerts": 0,
+     "bars": 27,
+     "close": 37.08,
+     "open": 37.44
+    },
+    {
+     "date": "2026-06-15",
+     "alerts": 0,
+     "bars": 18,
+     "close": 37.08,
+     "open": 37.3
+    },
+    {
+     "date": "2026-06-16",
+     "alerts": 0,
+     "bars": 8,
+     "close": 37.05,
+     "open": 37.06
+    },
+    {
+     "date": "2026-06-17",
+     "alerts": 0,
+     "bars": 7,
+     "close": 36.13,
+     "open": 37.12
+    },
+    {
+     "date": "2026-06-18",
+     "alerts": 0,
+     "bars": 2,
+     "close": 35.35,
+     "open": 36.39
+    },
+    {
+     "date": "2026-06-19",
+     "alerts": 0,
+     "bars": 6,
+     "close": 35.57,
+     "open": 35.4
+    },
+    {
+     "date": "2026-06-22",
+     "alerts": 0,
+     "bars": 9,
+     "close": 37.42,
+     "open": 35.81
+    },
+    {
+     "date": "2026-06-23",
+     "alerts": 0,
+     "bars": 8,
+     "close": 36.99,
+     "open": 37.87
+    },
+    {
+     "date": "2026-06-24",
+     "alerts": 0,
+     "bars": 77,
+     "close": 39.79,
+     "open": 37.7
+    },
+    {
+     "date": "2026-06-25",
+     "alerts": 0,
+     "bars": 85,
+     "close": 42.73,
+     "open": 41.36
+    }
+   ],
+   "last": 42.73,
+   "change": 7.39
+  },
+  {
+   "symbol": "PNB",
+   "dates": [
+    {
+     "date": "2026-06-17",
+     "alerts": 0,
+     "bars": 129,
+     "close": 108.91,
+     "open": 107.72
+    },
+    {
+     "date": "2026-06-18",
+     "alerts": 0,
+     "bars": 76,
+     "close": 109.52,
+     "open": 109.18
+    },
+    {
+     "date": "2026-06-19",
+     "alerts": 0,
+     "bars": 62,
+     "close": 108.74,
+     "open": 109.14
+    },
+    {
+     "date": "2026-06-22",
+     "alerts": 0,
+     "bars": 65,
+     "close": 109.7,
+     "open": 109.1
+    },
+    {
+     "date": "2026-06-23",
+     "alerts": 0,
+     "bars": 78,
+     "close": 107.44,
+     "open": 109.18
+    },
+    {
+     "date": "2026-06-24",
+     "alerts": 0,
+     "bars": 13,
+     "close": 106.96,
+     "open": 107.51
+    }
+   ],
+   "last": 106.96,
+   "change": -0.45
+  },
+  {
+   "symbol": "RELIANCE",
+   "dates": [
+    {
+     "date": "2026-05-15",
+     "alerts": 1,
+     "bars": 93,
+     "close": 1338.6,
+     "open": 1350.5
+    },
+    {
+     "date": "2026-05-18",
+     "alerts": 0,
+     "bars": 58,
+     "close": 1334.61,
+     "open": 1324.3
+    },
+    {
+     "date": "2026-05-19",
+     "alerts": 0,
+     "bars": 102,
+     "close": 1322.96,
+     "open": 1341.2
+    },
+    {
+     "date": "2026-05-20",
+     "alerts": 0,
+     "bars": 58,
+     "close": 1360.41,
+     "open": 1323.6
+    },
+    {
+     "date": "2026-05-21",
+     "alerts": 0,
+     "bars": 81,
+     "close": 1347.33,
+     "open": 1359.7
+    },
+    {
+     "date": "2026-05-22",
+     "alerts": 0,
+     "bars": 29,
+     "close": 1355.98,
+     "open": 1356.8
+    },
+    {
+     "date": "2026-05-25",
+     "alerts": 0,
+     "bars": 31,
+     "close": 1365.91,
+     "open": 1360.7
+    },
+    {
+     "date": "2026-05-26",
+     "alerts": 1,
+     "bars": 72,
+     "close": 1356.65,
+     "open": 1361.8
+    },
+    {
+     "date": "2026-05-27",
+     "alerts": 0,
+     "bars": 68,
+     "close": 1351.47,
+     "open": 1356.3
+    },
+    {
+     "date": "2026-05-29",
+     "alerts": 6,
+     "bars": 221,
+     "close": 1320.6,
+     "open": 1351.0
+    },
+    {
+     "date": "2026-06-01",
+     "alerts": 1,
+     "bars": 43,
+     "close": 1320.07,
+     "open": 1324.9
+    },
+    {
+     "date": "2026-06-02",
+     "alerts": 0,
+     "bars": 109,
+     "close": 1319.09,
+     "open": 1318.7
+    },
+    {
+     "date": "2026-06-03",
+     "alerts": 0,
+     "bars": 86,
+     "close": 1313.05,
+     "open": 1307.8
+    },
+    {
+     "date": "2026-06-04",
+     "alerts": 0,
+     "bars": 99,
+     "close": 1306.29,
+     "open": 1306.4
+    },
+    {
+     "date": "2026-06-05",
+     "alerts": 0,
+     "bars": 79,
+     "close": 1291.57,
+     "open": 1299.5
+    },
+    {
+     "date": "2026-06-08",
+     "alerts": 0,
+     "bars": 71,
+     "close": 1261.84,
+     "open": 1275.0
+    },
+    {
+     "date": "2026-06-09",
+     "alerts": 0,
+     "bars": 108,
+     "close": 1272.53,
+     "open": 1269.8
+    },
+    {
+     "date": "2026-06-10",
+     "alerts": 1,
+     "bars": 87,
+     "close": 1258.67,
+     "open": 1292.8
+    },
+    {
+     "date": "2026-06-11",
+     "alerts": 0,
+     "bars": 55,
+     "close": 1263.26,
+     "open": 1261.4
+    },
+    {
+     "date": "2026-06-12",
+     "alerts": 0,
+     "bars": 50,
+     "close": 1296.0,
+     "open": 1272.3
+    },
+    {
+     "date": "2026-06-15",
+     "alerts": 0,
+     "bars": 58,
+     "close": 1307.64,
+     "open": 1312.4
+    },
+    {
+     "date": "2026-06-16",
+     "alerts": 0,
+     "bars": 83,
+     "close": 1327.08,
+     "open": 1311.7
+    },
+    {
+     "date": "2026-06-17",
+     "alerts": 0,
+     "bars": 38,
+     "close": 1332.57,
+     "open": 1330.4
+    },
+    {
+     "date": "2026-06-18",
+     "alerts": 0,
+     "bars": 69,
+     "close": 1331.9,
+     "open": 1326.8
+    }
+   ],
+   "last": 1331.9,
+   "change": -0.05
+  },
+  {
+   "symbol": "SBIN",
+   "dates": [
+    {
+     "date": "2026-05-22",
+     "alerts": 0,
+     "bars": 48,
+     "close": 949.85,
+     "open": 956.0
+    },
+    {
+     "date": "2026-05-25",
+     "alerts": 0,
+     "bars": 73,
+     "close": 971.91,
+     "open": 961.4
+    },
+    {
+     "date": "2026-05-26",
+     "alerts": 0,
+     "bars": 107,
+     "close": 969.28,
+     "open": 975.7
+    },
+    {
+     "date": "2026-05-27",
+     "alerts": 0,
+     "bars": 52,
+     "close": 967.61,
+     "open": 970.4
+    },
+    {
+     "date": "2026-05-29",
+     "alerts": 0,
+     "bars": 160,
+     "close": 964.59,
+     "open": 968.8
+    },
+    {
+     "date": "2026-06-01",
+     "alerts": 2,
+     "bars": 66,
+     "close": 954.25,
+     "open": 965.25
+    },
+    {
+     "date": "2026-06-02",
+     "alerts": 0,
+     "bars": 99,
+     "close": 959.57,
+     "open": 949.15
+    },
+    {
+     "date": "2026-06-03",
+     "alerts": 6,
+     "bars": 167,
+     "close": 971.87,
+     "open": 944.25
+    },
+    {
+     "date": "2026-06-04",
+     "alerts": 0,
+     "bars": 96,
+     "close": 980.07,
+     "open": 970.3
+    },
+    {
+     "date": "2026-06-05",
+     "alerts": 0,
+     "bars": 104,
+     "close": 976.98,
+     "open": 986.45
+    },
+    {
+     "date": "2026-06-08",
+     "alerts": 0,
+     "bars": 61,
+     "close": 979.46,
+     "open": 981.9
+    },
+    {
+     "date": "2026-06-09",
+     "alerts": 0,
+     "bars": 109,
+     "close": 1004.36,
+     "open": 987.2
+    },
+    {
+     "date": "2026-06-10",
+     "alerts": 0,
+     "bars": 90,
+     "close": 1000.08,
+     "open": 1009.1
+    },
+    {
+     "date": "2026-06-11",
+     "alerts": 0,
+     "bars": 67,
+     "close": 1000.56,
+     "open": 1003.0
+    },
+    {
+     "date": "2026-06-12",
+     "alerts": 0,
+     "bars": 52,
+     "close": 1016.5,
+     "open": 1011.35
+    },
+    {
+     "date": "2026-06-15",
+     "alerts": 0,
+     "bars": 55,
+     "close": 1020.54,
+     "open": 1029.0
+    },
+    {
+     "date": "2026-06-16",
+     "alerts": 0,
+     "bars": 47,
+     "close": 1015.52,
+     "open": 1021.15
+    },
+    {
+     "date": "2026-06-17",
+     "alerts": 0,
+     "bars": 43,
+     "close": 1026.67,
+     "open": 1015.3
+    },
+    {
+     "date": "2026-06-18",
+     "alerts": 0,
+     "bars": 57,
+     "close": 1042.46,
+     "open": 1029.0
+    }
+   ],
+   "last": 1042.46,
+   "change": 1.54
+  },
+  {
+   "symbol": "TECHM",
+   "dates": [
+    {
+     "date": "2026-05-22",
+     "alerts": 0,
+     "bars": 29,
+     "close": 1425.23,
+     "open": 1407.5
+    },
+    {
+     "date": "2026-05-25",
+     "alerts": 0,
+     "bars": 50,
+     "close": 1437.97,
+     "open": 1427.9
+    },
+    {
+     "date": "2026-05-26",
+     "alerts": 4,
+     "bars": 116,
+     "close": 1460.0,
+     "open": 1442.1
+    },
+    {
+     "date": "2026-05-27",
+     "alerts": 3,
+     "bars": 113,
+     "close": 1456.09,
+     "open": 1465.0
+    },
+    {
+     "date": "2026-05-29",
+     "alerts": 0,
+     "bars": 224,
+     "close": 1479.8,
+     "open": 1468.2
+    },
+    {
+     "date": "2026-06-01",
+     "alerts": 6,
+     "bars": 236,
+     "close": 1539.33,
+     "open": 1514.2
+    },
+    {
+     "date": "2026-06-02",
+     "alerts": 5,
+     "bars": 135,
+     "close": 1570.0,
+     "open": 1567.1
+    },
+    {
+     "date": "2026-06-03",
+     "alerts": 0,
+     "bars": 101,
+     "close": 1470.59,
+     "open": 1518.4
+    },
+    {
+     "date": "2026-06-04",
+     "alerts": 0,
+     "bars": 62,
+     "close": 1488.06,
+     "open": 1486.8
+    },
+    {
+     "date": "2026-06-05",
+     "alerts": 0,
+     "bars": 62,
+     "close": 1483.45,
+     "open": 1511.6
+    },
+    {
+     "date": "2026-06-08",
+     "alerts": 0,
+     "bars": 77,
+     "close": 1499.87,
+     "open": 1465.6
+    },
+    {
+     "date": "2026-06-09",
+     "alerts": 0,
+     "bars": 39,
+     "close": 1485.96,
+     "open": 1497.9
+    },
+    {
+     "date": "2026-06-10",
+     "alerts": 0,
+     "bars": 34,
+     "close": 1479.71,
+     "open": 1479.5
+    },
+    {
+     "date": "2026-06-11",
+     "alerts": 0,
+     "bars": 69,
+     "close": 1469.07,
+     "open": 1447.6
+    },
+    {
+     "date": "2026-06-12",
+     "alerts": 0,
+     "bars": 87,
+     "close": 1431.0,
+     "open": 1456.2
+    },
+    {
+     "date": "2026-06-15",
+     "alerts": 0,
+     "bars": 64,
+     "close": 1427.23,
+     "open": 1442.3
+    },
+    {
+     "date": "2026-06-16",
+     "alerts": 0,
+     "bars": 70,
+     "close": 1450.18,
+     "open": 1439.3
+    },
+    {
+     "date": "2026-06-17",
+     "alerts": 1,
+     "bars": 68,
+     "close": 1460.68,
+     "open": 1464.7
+    },
+    {
+     "date": "2026-06-18",
+     "alerts": 0,
+     "bars": 69,
+     "close": 1448.31,
+     "open": 1443.1
+    }
+   ],
+   "last": 1448.31,
+   "change": -0.85
+  },
+  {
+   "symbol": "YESBANK",
+   "dates": [
+    {
+     "date": "2026-06-17",
+     "alerts": 6,
+     "bars": 160,
+     "close": 25.14,
+     "open": 24.26
+    },
+    {
+     "date": "2026-06-18",
+     "alerts": 0,
+     "bars": 57,
+     "close": 25.47,
+     "open": 25.58
+    },
+    {
+     "date": "2026-06-19",
+     "alerts": 0,
+     "bars": 37,
+     "close": 25.41,
+     "open": 25.55
+    },
+    {
+     "date": "2026-06-22",
+     "alerts": 0,
+     "bars": 47,
+     "close": 24.95,
+     "open": 25.31
+    },
+    {
+     "date": "2026-06-23",
+     "alerts": 0,
+     "bars": 32,
+     "close": 24.51,
+     "open": 24.94
+    },
+    {
+     "date": "2026-06-24",
+     "alerts": 0,
+     "bars": 16,
+     "close": 24.92,
+     "open": 24.95
+    }
+   ],
+   "last": 24.92,
+   "change": 1.67
+  }
+ ],
+ "results": {
+  "rows": 3804,
+  "big_moves": 519,
+  "base_rate": 0.1364,
+  "alert_rate": 0.2013,
+  "auc": {
+   "time_chart": 0.7427,
+   "vpin": 0.6526,
+   "volume_bars": 0.6803,
+   "volumelens": 0.7759
+  },
+  "catch_rate": {
+   "time_chart": 0.4605,
+   "vpin": 0.4374,
+   "volume_bars": 0.395,
+   "volumelens": 0.5164
+  },
+  "precision": {
+   "time_chart": 0.3153,
+   "vpin": 0.3007,
+   "volume_bars": 0.2697,
+   "volumelens": 0.3499
+  },
+  "per_stock": {
+   "NARMADA": {
+    "rows": 207,
+    "big_moves": 39,
+    "auc_vpin": 0.5998,
+    "auc_volumelens": 0.6244
+   },
+   "PNB": {
+    "rows": 336,
+    "big_moves": 13,
+    "auc_vpin": 0.3835,
+    "auc_volumelens": 0.4626
+   },
+   "RELIANCE": {
+    "rows": 910,
+    "big_moves": 75,
+    "auc_vpin": 0.4923,
+    "auc_volumelens": 0.712
+   },
+   "SBIN": {
+    "rows": 1002,
+    "big_moves": 162,
+    "auc_vpin": 0.7787,
+    "auc_volumelens": 0.8242
+   },
+   "TECHM": {
+    "rows": 1048,
+    "big_moves": 157,
+    "auc_vpin": 0.6171,
+    "auc_volumelens": 0.739
+   },
+   "YESBANK": {
+    "rows": 301,
+    "big_moves": 73,
+    "auc_vpin": 0.6732,
+    "auc_volumelens": 0.8558
+   }
+  },
+  "folds": 7,
+  "test_days": [
+   "2026-05-29",
+   "2026-06-01",
+   "2026-06-02",
+   "2026-06-03",
+   "2026-06-04",
+   "2026-06-05",
+   "2026-06-08",
+   "2026-06-09",
+   "2026-06-10",
+   "2026-06-11",
+   "2026-06-12",
+   "2026-06-15",
+   "2026-06-16",
+   "2026-06-17",
+   "2026-06-18",
+   "2026-06-19",
+   "2026-06-22",
+   "2026-06-23",
+   "2026-06-24",
+   "2026-06-25"
+  ],
+  "features": [
+   "vol_spike_log",
+   "log_pace",
+   "vpin",
+   "open_hour"
+  ]
+ },
+ "settings": {
+  "bars_per_day": 75,
+  "lookback_days": 20,
+  "fast": 0.4,
+  "watch": 0.7,
+  "pace_bars": 3,
+  "vpin_window": 50,
+  "label": "range over next 30 min > 2.0x normal"
+ }
+}

@@ -1,0 +1,91 @@
+{
+ "rows": 3804,
+ "big_moves": 519,
+ "base_rate": 0.1364,
+ "alert_rate": 0.2013,
+ "auc": {
+  "time_chart": 0.7427,
+  "vpin": 0.6526,
+  "volume_bars": 0.6803,
+  "volumelens": 0.7759
+ },
+ "catch_rate": {
+  "time_chart": 0.4605,
+  "vpin": 0.4374,
+  "volume_bars": 0.395,
+  "volumelens": 0.5164
+ },
+ "precision": {
+  "time_chart": 0.3153,
+  "vpin": 0.3007,
+  "volume_bars": 0.2697,
+  "volumelens": 0.3499
+ },
+ "per_stock": {
+  "NARMADA": {
+   "rows": 207,
+   "big_moves": 39,
+   "auc_vpin": 0.5998,
+   "auc_volumelens": 0.6244
+  },
+  "PNB": {
+   "rows": 336,
+   "big_moves": 13,
+   "auc_vpin": 0.3835,
+   "auc_volumelens": 0.4626
+  },
+  "RELIANCE": {
+   "rows": 910,
+   "big_moves": 75,
+   "auc_vpin": 0.4923,
+   "auc_volumelens": 0.712
+  },
+  "SBIN": {
+   "rows": 1002,
+   "big_moves": 162,
+   "auc_vpin": 0.7787,
+   "auc_volumelens": 0.8242
+  },
+  "TECHM": {
+   "rows": 1048,
+   "big_moves": 157,
+   "auc_vpin": 0.6171,
+   "auc_volumelens": 0.739
+  },
+  "YESBANK": {
+   "rows": 301,
+   "big_moves": 73,
+   "auc_vpin": 0.6732,
+   "auc_volumelens": 0.8558
+  }
+ },
+ "folds": 7,
+ "test_days": [
+  "2026-05-29",
+  "2026-06-01",
+  "2026-06-02",
+  "2026-06-03",
+  "2026-06-04",
+  "2026-06-05",
+  "2026-06-08",
+  "2026-06-09",
+  "2026-06-10",
+  "2026-06-11",
+  "2026-06-12",
+  "2026-06-15",
+  "2026-06-16",
+  "2026-06-17",
+  "2026-06-18",
+  "2026-06-19",
+  "2026-06-22",
+  "2026-06-23",
+  "2026-06-24",
+  "2026-06-25"
+ ],
+ "features": [
+  "vol_spike_log",
+  "log_pace",
+  "vpin",
+  "open_hour"
+ ]
+}

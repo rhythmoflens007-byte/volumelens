@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VolumeLens</title>
+<meta name="description" content="Volume-normalized charts for NSE stocks: time candles, adaptive volume candles, fill-time and VPIN, absorption and explained alerts.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' fill='%23089981'/%3E%3Crect x='6.5' y='2' width='3' height='12' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' fill='%23F23645'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css?v=5">
+</head>
+<body>
+<header class="toolbar">
+  <div class="brand">VolumeLens</div>
+  <div class="sep"></div>
+  <div class="symbol-picker">
+    <input id="symbol-input" type="text" autocomplete="off" spellcheck="false" aria-label="Symbol">
+    <ul id="symbol-list" class="dropdown" hidden></ul>
+  </div>
+  <div class="sep"></div>
+  <button id="prev-day" class="icon-btn" title="Previous day" aria-label="Previous day">&#8249;</button>
+  <select id="date-select" aria-label="Trading day"></select>
+  <button id="next-day" class="icon-btn" title="Next day" aria-label="Next day">&#8250;</button>
+  <div class="sep"></div>
+  <span class="tb-label">Time chart <b>5m</b></span>
+  <span class="tb-label">Volume bar <b id="bar-size">–</b></span>
+  <div class="spacer"></div>
+  <label class="toggle" title="Shade fast-inflow zones on the time chart"><input id="zones-toggle" type="checkbox" checked> Zones on time chart</label>
+  <button id="theme-btn" class="text-btn" title="Switch theme">Light</button>
+  <button id="help-btn" class="text-btn" title="How to read the charts">Help</button>
+</header>
+
+<main class="workspace">
+  <section class="charts">
+    <div class="chart-wrap" id="time-wrap">
+      <div id="time-chart" class="chart"></div>
+      <div class="legend" id="legend-time"></div>
+    </div>
+    <div class="resizer" id="resizer" title="Drag to resize"></div>
+    <div class="chart-wrap" id="vol-wrap">
+      <div id="vol-chart" class="chart"></div>
+      <div class="legend" id="legend-vol"></div>
+      <div class="legend" id="legend-fill"></div>
+      <div class="legend" id="legend-aai"></div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <div class="panel">
+      <div class="panel-head">Watchlist</div>
+      <table class="watchlist"><thead><tr><th>Symbol</th><th>Last</th><th>Chg%</th></tr></thead><tbody id="watchlist"></tbody></table>
+    </div>
+    <div class="panel grow">
+      <div class="panel-head">Alerts <span id="alert-count" class="muted"></span></div>
+      <ul id="alerts" class="alerts"></ul>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Validation <span class="muted">walk-forward, unseen days</span></div>
+      <table class="results" id="results"></table>
+      <p class="note" id="results-note"></p>
+    </div>
+  </aside>
+</main>
+
+<footer class="statusbar">
+  <span id="status-data">Loading…</span>
+  <span class="spacer"></span>
+  <span>Educational tool, not investment advice</span>
+</footer>
+
+<dialog id="help">
+  <h2>How to read VolumeLens</h2>
+  <dl>
+    <dt>Time chart</dt>
+    <dd>Normal 5-minute candles. Orange shading marks the minutes where volume flowed in unusually fast.</dd>
+    <dt>Volume candles</dt>
+    <dd>Each candle is a fixed number of shares, not a fixed number of minutes. The size adapts per stock from its previous 20 days. <span class="swatch fast"></span>Orange candles filled fast: the last 3 bars took under 40% of their normal time.</dd>
+    <dt>Fill time + VPIN</dt>
+    <dd>Bars show how many minutes each volume candle took to fill; a short bar means volume arrived fast. The white line is the smoothed fill time, the dashed line is the normal fill time for that moment. The blue line is VPIN (0–1): how one-sided buying versus selling was over the last 50 candles.</dd>
+    <dt>Absorption</dt>
+    <dd>1 − actual price move ÷ expected move. Near 1: heavy trading but the price barely moved, so someone absorbed the flow. Below 0: price moved more than usual.</dd>
+    <dt>Alerts</dt>
+    <dd>A LightGBM model scores every candle for the chance of a big move (a 30-minute range over 2× normal). The top 4% of scores become alerts (at most 6 per stock per day), each listing the signals that drove it (TreeSHAP). Scores come from models that never saw that day.</dd>
+    <dt>Controls</dt>
+    <dd>Scroll to zoom, drag to pan, double-click a scale to reset. ← → step through volume candles. Esc fits the whole day.</dd>
+  </dl>
+  <form method="dialog"><button class="text-btn">Close</button></form>
+</dialog>
+
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
+<script src="js/app.js?v=5"></script>
+</body>
+</html>
