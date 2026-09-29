@@ -3,17 +3,18 @@
 Run everything with:
 
 ```bash
-.venv/Scripts/python -m pytest -q        # engine: 11 tests
-npx playwright test                      # terminal: 13 checks x 2 browsers
+.venv/Scripts/python -m pytest -q        # engine and live server: 16 tests
+npx playwright test                      # terminal: 19 checks x 2 browsers (starts a simulated live server)
 .venv/Scripts/python backtest.py         # validation: backtest/report.md
 ```
 
-## Engine (pytest): 11 passed
+## Engine and live server (pytest): 16 passed
 
 | Test | Guarantees |
 |---|---|
-| every bar reaches its share target | each volume candle holds exactly its share size |
-| bar volume is conserved | candles never contain more shares than traded that session |
+| every bar reaches its share target | each volume candle holds at least its share size |
+| candles are minute-aligned with real prices | every candle starts and ends on a minute boundary; open, high, low and close are real traded minute prices |
+| bar volume is conserved | candles contain exactly the shares traded in the session |
 | no bar crosses a trading day | every candle starts and ends in its own session |
 | bars in time order, positive fill | no zero-duration or out-of-order candles |
 | bar size uses previous days only | changing today's or later volume leaves today's candle size unchanged |
@@ -23,24 +24,33 @@ npx playwright test                      # terminal: 13 checks x 2 browsers
 | VPIN and absorption ranges | VPIN in [0, 1], absorption ≤ 1 |
 | labels look forward within the day only | late candles whose 30-minute window runs past the close get no label |
 | AUC implementation | matches known values |
+| quality gate | removes the running-total volume glitch and nothing else |
+| **live equals batch** (RELIANCE, SBIN) | feeding 29 Sep minute by minute through the live server gives exactly the candles and indicators of the batch pipeline, for all three densities |
+| **live never repaints** | recomputing after every minute never changes a candle that was already published |
 
-## Terminal (Playwright): 26 passed (13 checks × Microsoft Edge and Google Chrome)
+## Terminal (Playwright): 38 passed (19 checks × Microsoft Edge and Google Chrome)
 
 Every check fails on any uncaught page error or console error.
 
 | Check | What is verified |
 |---|---|
-| Loads the most urgent session | URL, urgency card, scanner, evidence table, legends placed; load time under 3 s |
-| Time frames 1/3/5/15/30 m | compare chart rebuilds with the right candle count and stays aligned with the main chart |
-| Zoom in, zoom out, pan, fit | after 8 zoom-ins, a drag pan, 20 zoom-outs and Esc, the compare chart still covers the main chart's time span (within one candle) and legends stay pinned to their panes |
-| Drawing tools | zone and trend line from fast two-click input, horizontal line on both charts, measure, undo, clear, keyboard shortcuts |
-| Replay | at 30 min/s: no time candle or alert from the future is shown; stepping works; exit restores the full session in sync |
-| Unfold | clicking a time candle shows the unfold card and glides the main chart; Esc closes it |
-| Layers, theme, navigation | absorption pane adds and removes a pane; compare chart hides and shows; light/dark; scanner, sessions list and day navigation |
-| Snapshot | downloads `VolumeLens_<SYMBOL>_<date>.png` |
+| Opens fast | continuous chart of the latest sessions, legends placed, load time checked |
+| History streams in | scrolling left loads earlier sessions without the view jumping |
+| Ranges, sessions, densities | 1D/5D/1M/All, go to session, Fine/Standard/Coarse keep the same moments in view |
+| Time frames 1/3/5/15/30 m | compare chart rebuilds and stays aligned with the main chart |
+| Zoom, pan, go to latest | both charts stay aligned; legends stay pinned to their panes |
+| Drawing tools | zone and trend line from fast two-click input, horizontal line on both charts, measure, undo, clear |
+| Replay | no candle or alert from the future is shown; stepping works; exit restores the view |
+| Unfold | clicking a time candle reveals the volume candles inside it |
+| Layers, theme, scanner, sessions | optional panes add and remove; light/dark; scanner and session list navigate |
+| Snapshot | downloads a PNG |
 | Data failure | a failed data request shows a clear message; Try again recovers |
-| Layouts | 1920×1080, 1366×768 and 1024×768 in dark and light: no horizontal overflow, legends inside the chart; screenshots saved to `test-results/screens/` |
+| Layouts | 1920×1080, 1366×768 and 1024×768 in dark and light: no horizontal overflow, legends inside the chart |
+| **Phone** | 390×844: chart on the first screen, no sideways scroll, scanner and evidence reachable |
+| Smoothness | frame rate while zooming and panning matches the idle frame rate, with no long frames |
 | Accessibility | axe-core WCAG 2 A/AA scan: no serious or critical issues (chart canvases excluded) |
+| **Live stream** | against the live server replaying 29 Sep: SIMULATED badge, the chart holds exactly what the server published, new candles arrive, published candles never change, the view follows the newest candle |
+| **Live server missing** | the badge shows Reconnecting… and the terminal stays fully usable |
 
 Firefox could not be tested from the build machine (the Playwright Firefox download was blocked); Edge and Chrome cover the Chromium engine.
 
@@ -50,7 +60,9 @@ Firefox could not be tested from the build machine (the Playwright Firefox downl
 |---|---|---|
 | Replay tests | the "zone" flag looked ahead to the rest of its run | zones now form from the streak so far |
 | Backtest review | outcome window started inside the minute already used by the features | decisions at minute end; outcome window starts next minute |
-| Browser test | switching time frame left the compare chart on a stale range | explicit re-sync after every rebuild |
-| Browser test | quick two-click drawing lost the second point (chart treats it as a double-click) | points read from raw pointer events, drags ignored |
-| Accessibility scan | 20 text elements below WCAG AA contrast | muted text, light-theme accent and up/down colours darkened |
-| Manual QA | alerts repeated inside one block-trade minute; absorption faked inside a single minute | 15-minute alert spacing; no absorption reading inside one minute |
+| Data review | AngelOne reported the day's running total as minute volume (15:20–15:29, 29 Sep, all stocks) | quality gate removes such runs before candles are built |
+| Live test | live candles differed slightly from batch (too little history for the baselines) | live server keeps 45 sessions of history |
+| Browser test | separator labels showed the wrong date at fractional positions | interpolated coordinates |
+| Browser test | switching density while history loaded made the view jump | view kept by time, history loading paused during rebuilds |
+| Browser test | quick two-click drawing lost the second point | points read from raw pointer events, drags ignored |
+| Accessibility scan | text elements below WCAG AA contrast | muted text and accent colours darkened |
