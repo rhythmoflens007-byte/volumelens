@@ -18,7 +18,7 @@ module.exports = defineConfig({
   webServer: [
     {
       command: `${PY} -m http.server 8777 --bind 127.0.0.1 --directory web`,
-      url: 'http://127.0.0.1:8777/index.html',
+      url: 'http://127.0.0.1:8777/terminal.html',
       reuseExistingServer: true,
     },
     {

@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=43';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=43';
-import { loadIndex, Series } from './data.js?v=43';
-import { createTools } from './tools.js?v=43';
-import { SessionSeparators, CompareBands, ClockOverlay } from './overlays.js?v=43';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=50';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=50';
+import { loadIndex, Series } from './data.js?v=50';
+import { createTools } from './tools.js?v=50';
+import { SessionSeparators, CompareBands, ClockOverlay, BrickOverlay } from './overlays.js?v=50';
 
 const LWC = window.LightweightCharts;
 
@@ -36,8 +36,10 @@ const THEMES = {
     band: 'rgba(91,98,112,0.06)', bandText: 'rgba(91,98,112,0.7)', calm: '#aab0ba', hot: '#d84315',
   },
 };
-const DENSITY_LABEL = { fine: 'Fine', standard: 'Standard', coarse: 'Coarse' };
-const DEFAULT_SETTINGS = { colorBy: 'both', bands: true, bandMin: 30, ribbon: false, badges: true, scale: 'normal', urgent: 60, watch: 30 };
+const DENSITY_LABEL = { fine: 'Small', standard: 'Medium', coarse: 'Large' };
+const CHART_TYPES = { bricks: 'Bricks', candles: 'Candles', line: 'Line' };
+const TYPE_NAME = { bricks: 'Volume Bricks', candles: 'Volume Candles', line: 'Urgency Line' };
+const DEFAULT_SETTINGS = { chartType: 'bricks', forming: true, colorBy: 'both', bands: false, bandMin: 30, ribbon: false, badges: false, scale: 'normal', urgent: 60, watch: 30 };
 
 const state = {
   index: null, symbol: null, series: null,
@@ -49,8 +51,8 @@ const state = {
   view: { bars: [], minutes: [], alerts: [], starts: [] },
   candles: [], upto: 0, cursor: null, burst: null,
   replay: null, playing: false, timer: null,
-  crosshairLock: false, loadingEarlier: false,
-  settings: Object.assign({}, DEFAULT_SETTINGS, store('vl:settings') || {}),
+  crosshairLock: false, loadingEarlier: false, forming: null, brickPts: null,
+  settings: Object.assign({}, DEFAULT_SETTINGS, store('vl:settings:v2') || {}),
 };
 TH.urgent = state.settings.urgent; TH.watch = state.settings.watch;
 const th = () => THEMES[state.theme];
@@ -78,6 +80,11 @@ function chartOptions() {
 }
 const candleOptions = () => ({ upColor: th().up, downColor: th().down, wickUpColor: th().up, wickDownColor: th().down,
   borderVisible: state.layers.hollow || state.settings.colorBy === 'heat', borderUpColor: th().up, borderDownColor: th().down });
+/** Main series: bricks have no wicks and always a border; the line type hides the candles (they stay as the anchor for tools and markers). */
+const mainOptions = () => {
+  const type = state.settings.chartType;
+  return { ...candleOptions(), wickVisible: type === 'candles', lastValueVisible: type === 'candles', priceLineVisible: type === 'candles' };
+};
 
 /** Urgency heat: calm grey, then watch amber, then urgent orange, hotter towards 100. */
 function heat(u, ribbon = false) {
@@ -88,9 +95,13 @@ function heat(u, ribbon = false) {
 }
 
 const volChart = LWC.createChart($('vol-chart'), chartOptions());
-const vCandles = volChart.addSeries(LWC.CandlestickSeries, candleOptions(), 0);
+const vCandles = volChart.addSeries(LWC.CandlestickSeries, mainOptions(), 0);
+const vLine = volChart.addSeries(LWC.AreaSeries, { lineWidth: 2, lineType: LWC.LineType.Simple, priceLineVisible: false, lastValueVisible: false,
+  crosshairMarkerVisible: false, visible: false }, 0);
 const clock = new ClockOverlay(th);
 vCandles.attachPrimitive(clock);                // first, so session labels paint over it
+const brickFx = new BrickOverlay(th);           // urgency glow behind bricks and the forming brick
+vCandles.attachPrimitive(brickFx);
 const vUrg = volChart.addSeries(LWC.HistogramSeries, {
   priceLineVisible: false, lastValueVisible: false, base: 0,
   priceFormat: { type: 'custom', formatter: (v) => v.toFixed(0), minMove: 1 },
@@ -168,7 +179,7 @@ function styleOptional() {
 
 function setWatermark() {
   const lines = [{ text: state.symbol || '', color: th().watermark, fontSize: 64, fontStyle: '600' },
-    { text: `volume candles · ${DENSITY_LABEL[state.density].toLowerCase()}`, color: th().watermark, fontSize: 16 }];
+    { text: `${TYPE_NAME[state.settings.chartType].toLowerCase()} · ${DENSITY_LABEL[state.density].toLowerCase()} box`, color: th().watermark, fontSize: 16 }];
   if (watermark) watermark.applyOptions({ lines });
   else watermark = LWC.createTextWatermark(volChart.panes()[0], { horzAlign: 'center', vertAlign: 'center', lines });
 }
@@ -177,8 +188,9 @@ function applyTheme() {
   document.documentElement.dataset.theme = state.theme;
   $('theme-btn').textContent = state.theme === 'dark' ? 'Light' : 'Dark';
   for (const ch of [volChart, timeChart]) ch.applyOptions(chartOptions());
-  vCandles.applyOptions(candleOptions());
+  vCandles.applyOptions(mainOptions());
   tCandles.applyOptions(candleOptions());
+  styleLine();
   styleUrgency();
   styleOptional();
   tools.recolor();
@@ -186,6 +198,37 @@ function applyTheme() {
 }
 
 // ================================================================ points for series
+const CLEAR = 'rgba(0,0,0,0)';
+/** One point of the main series for bar k, drawn as the chosen chart type. */
+function mainPoint(k) {
+  const b = bars(), r = b[k], type = state.settings.chartType;
+  if (type === 'candles') return candlePoint(r);
+  if (type === 'line') return { time: r[B.T], open: r[B.O], high: r[B.H], low: r[B.L], close: r[B.C], color: CLEAR, borderColor: CLEAR, wickColor: CLEAR };
+  // Volume Brick: from the previous brick's close to this close (Renko grammar), no wick.
+  const prev = k > 0 && b[k - 1][B.SESSION] === r[B.SESSION] ? b[k - 1][B.C] : r[B.O];
+  const t = th(), by = state.settings.colorBy, up = r[B.C] >= prev, u = r[B.UIDX];
+  const dir = up ? t.up : t.down;
+  let body = dir, edge = dir;
+  if (by === 'heat') { body = heat(u); edge = body; }
+  else if (by === 'both') {
+    const f = u == null ? 0 : clamp((u - TH.watch) / Math.max(1, TH.urgent - TH.watch), 0, 1);
+    body = mix(t.bg, dir, 0.34 + 0.66 * f);                 // calm bricks recede, urgent bricks are full strength
+    edge = r[B.SPEED] === URGENT ? t.accent : mix(t.bg, dir, 0.5 + 0.5 * f);
+  }
+  const lo = Math.min(prev, r[B.C]), hi = Math.max(prev, r[B.C]);
+  return { time: r[B.T], open: prev, high: hi, low: lo, close: r[B.C], color: CLEAR, borderColor: CLEAR, wickColor: CLEAR, body, edge };
+}
+function linePoint(r) { return { time: r[B.T], value: r[B.C] }; }
+function styleLine() {
+  const t = th(), on = state.settings.chartType === 'line';
+  vLine.applyOptions({ visible: on, topColor: `${t.accent}26`, bottomColor: `${t.accent}00`, lineColor: t.smooth });
+}
+/** Colour the line by urgency, segment by segment. */
+function lineData(vb) {
+  const t = th();
+  return vb.map((r) => ({ ...linePoint(r), lineColor: r[B.UIDX] == null ? t.text : r[B.SPEED] === URGENT ? heat(r[B.UIDX]) : r[B.SPEED] === WATCH ? t.watch : t.text }));
+}
+
 function candlePoint(r) {
   const t = th(), by = state.settings.colorBy, up = r[B.C] >= r[B.O];
   let col = up ? t.up : t.down, hollowUp = state.layers.hollow && up;
@@ -218,7 +261,10 @@ const lastTime = () => (state.upto ? bars()[state.upto - 1][B.T] : 0);
 
 function draw() {
   const vb = visible();
-  vCandles.setData(vb.map(candlePoint));
+  const pts = vb.map((r, k) => mainPoint(k));
+  vCandles.setData(pts.map(({ body, edge, ...pt }) => pt));
+  state.brickPts = pts;
+  vLine.setData(state.settings.chartType === 'line' ? lineData(vb) : []);
   vUrg.setData(vb.map(urgencyPoint));
   if (Object.keys(optional).length) {
     const cols = {};
@@ -263,7 +309,11 @@ function shadeCompare() {
 /** Replay step forward: append one candle to every series instead of redrawing. */
 function appendBar(k) {
   const r = bars()[k];
-  vCandles.update(candlePoint(r));
+  const pt = mainPoint(k);
+  const { body, edge, ...plain } = pt;
+  vCandles.update(plain);
+  if (state.brickPts) state.brickPts[k] = pt;
+  if (state.settings.chartType === 'line') vLine.update(lineData([r])[0]);
   vUrg.update(urgencyPoint(r));
   for (const [key, p] of Object.entries(optionalPoints(r))) optional[key].update(p);
   const before = state.candles.length;
@@ -280,6 +330,33 @@ function appendBar(k) {
 function setClock() {
   const b = bars(), st = state.view.starts;
   clock.set(b, state.upto, state.settings, (k) => st[b[k][B.SESSION]]?.size, heat);
+  const bricks = state.settings.chartType === 'bricks';
+  setLastPrice();
+  brickFx.set({
+    bricks: bricks ? (state.brickPts || []).slice(0, state.upto) : [],
+    glow: bricks && state.settings.colorBy !== 'direction' ? urgentRuns() : [],
+    forming: bricks && state.settings.forming && !state.replay && state.upto === b.length ? state.forming : null,
+    lastClose: state.upto ? b[state.upto - 1][B.C] : null, index: state.upto,
+  });
+}
+/** Brick and line types hide the series' own last-price label, so draw one price line instead. */
+let lastPriceLine = null;
+function setLastPrice() {
+  if (lastPriceLine) { vCandles.removePriceLine(lastPriceLine); lastPriceLine = null; }
+  if (state.settings.chartType === 'candles' || !state.upto) return;
+  const r = bars()[state.upto - 1], t = th();
+  const col = state.settings.chartType === 'bricks' && state.brickPts?.[state.upto - 1]?.edge || (r[B.C] >= r[B.O] ? t.up : t.down);
+  lastPriceLine = vCandles.createPriceLine({ price: r[B.C], color: col, lineWidth: 1, lineStyle: LWC.LineStyle.Dotted, axisLabelVisible: true, title: '' });
+}
+/** Urgent bricks as index ranges, for the glow. */
+function urgentRuns() {
+  const b = bars(), out = [];
+  for (let k = 0; k < state.upto; k++) {
+    if (b[k][B.SPEED] !== URGENT) continue;
+    const prev = k > 0 && b[k - 1][B.SESSION] === b[k][B.SESSION] ? b[k - 1][B.C] : b[k][B.O];
+    out.push({ k, lo: Math.min(prev, b[k][B.C]), hi: Math.max(prev, b[k][B.C]) });
+  }
+  return out;
 }
 
 // ================================================================ loading
@@ -413,6 +490,18 @@ function connectLive(symbol) {
   };
 }
 
+/** The brick being filled right now: shares since the last complete brick, as a share of the box. */
+function formingBrick(p) {
+  const rows = p.bars[state.density], size = p.size[state.density], last = rows.at(-1);
+  if (!last || !size) return null;
+  const after = p.minutes.filter((m) => m[0] >= last[B.T]);
+  const f = p.live?.forming;
+  const vol = after.reduce((a, m) => a + m[5], 0) + (f ? f[5] : 0);
+  const price = f ? f[4] : (after.at(-1) || p.minutes.at(-1))[4];
+  const now = f ? f[0] + 60 : (p.minutes.at(-1)[0] + 60);
+  return { frac: Math.min(1, vol / size), price, minutes: Math.max(0, Math.round((now - last[B.T]) / 60)) };
+}
+
 function onLive(p) {
   if (p.symbol !== state.symbol || !state.series || !p.bars?.standard?.length) return;
   showLiveState(p.live?.mode, p.minutes.at(-1)?.[0]);
@@ -427,6 +516,7 @@ function onLive(p) {
   const atEdge = !range || range.to >= state.upto - 2;        // following the latest candle
   const keep = atEdge ? null : visibleTimeRange();
   state.series.upsertLive(p);
+  state.forming = formingBrick(p);
   renderScanner();
   if (state.replay) return;                                  // replay keeps its own frozen view
   rebuild(keep);
@@ -609,7 +699,8 @@ const showDetails = perFrame((barIdx, candleIdx) => {
   const start = state.view.starts[r[B.SESSION]];
   const cc = c && (c[4] >= c[1] ? 'up' : 'down'), rc = r[B.C] >= r[B.O] ? 'up' : 'down';
   const [lv, lcls] = level(r[B.UIDX]);
-  $('legend-vol').innerHTML = `<span class="title">${state.symbol} · Volume candles · 1 = ${shares(start.size)} sh</span>` +
+  const unit = state.settings.chartType === 'bricks' ? 'brick' : 'candle';
+  $('legend-vol').innerHTML = `<span class="title">${state.symbol} · ${TYPE_NAME[state.settings.chartType]} · 1 ${unit} = ${shares(start.size)} sh</span>` +
     kv('O', fmt(r[B.O]), rc) + kv('H', fmt(r[B.H]), rc) + kv('L', fmt(r[B.L]), rc) + kv('C', fmt(r[B.C]), rc) +
     kv('', `${shortDate(start.date)} ${hhmm(r[B.START])}–${hhmm(r[B.T])}`) +
     kv('filled in', `${fmt(r[B.FILL], 0)} min`) + (r[B.BASE] != null ? kv('normal', `${fmt(r[B.BASE], 1)} min`) : '');
@@ -866,7 +957,7 @@ function fillSessions() {
   const meta = state.index.stocks.find((s) => s.symbol === state.symbol).sessions;
   $('session-select').innerHTML = [...meta].reverse().map((d) => `<option value="${d.date}">${d.date}  ${String(Math.round(d.urgency_score)).padStart(2)}%${d.alerts ? ' ●' : ''}</option>`).join('');
   if (shownSession) $('session-select').value = shownSession;
-  $('status-data').textContent = `${state.symbol} · ${state.series.sessions.length} of ${meta.length} sessions loaded (${shortDate(state.series.loadedFrom)} – ${shortDate(meta.at(-1).date)}) · NSE 1-minute data · ${DENSITY_LABEL[state.density]} candles`;
+  $('status-data').textContent = `${state.symbol} · ${state.series.sessions.length} of ${meta.length} sessions loaded (${shortDate(state.series.loadedFrom)} – ${shortDate(meta.at(-1).date)}) · NSE 1-minute data · ${TYPE_NAME[state.settings.chartType]}, ${DENSITY_LABEL[state.density].toLowerCase()} box`;
 }
 $('session-select').addEventListener('change', (e) => { if (!state.replay) goToSession(e.target.value); });
 
@@ -908,6 +999,10 @@ function segmented(id, items, current, onPick) {
   });
 }
 segmented('density', Object.keys(DENSITY_LABEL).map((k) => [k, DENSITY_LABEL[k]]), state.density, (v) => setDensity(v));
+segmented('ctype', Object.keys(CHART_TYPES).map((k) => [k, CHART_TYPES[k]]), state.settings.chartType, (v) => {
+  state.settings.chartType = v;
+  applySettings();
+});
 function setDensity(v) {
   if (v === state.density) return;
   if (state.replay) exitReplay();
@@ -935,7 +1030,7 @@ function applyLayers() {
   document.querySelectorAll('[data-layer]').forEach((c) => { c.checked = !!L[c.dataset.layer]; });
   $('time-wrap').hidden = !L.compare;
   $('resizer').hidden = !L.compare;
-  vCandles.applyOptions(candleOptions());
+  vCandles.applyOptions(mainOptions());
   tCandles.applyOptions(candleOptions());
   setPanes();
   store('vl:layers', L);
@@ -967,10 +1062,13 @@ function applySettings(redraw = true) {
   const S = state.settings;
   if (S.watch >= S.urgent) S.watch = S.urgent - 5;
   TH.urgent = S.urgent; TH.watch = S.watch;
-  store('vl:settings', S);
+  store('vl:settings:v2', S);
   styleUrgency();
   volChart.priceScale('right', 0).applyOptions({ mode: SCALE_MODE[S.scale] ?? LWC.PriceScaleMode.Normal });
-  vCandles.applyOptions(candleOptions());
+  vCandles.applyOptions(mainOptions());
+  styleLine();
+  $('ctype').querySelectorAll('button').forEach((x) => { const on = x.dataset.v === S.chartType; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
+  if (state.symbol) { setWatermark(); fillSessions(); }
   syncSettingsForm();
   if (!redraw || !state.symbol) return;
   if (state.replay) { draw(); return; }
@@ -1029,7 +1127,7 @@ function snapshot() {
   if (comp) g.drawImage(comp, 0, head + main.height, main.width, compH);
   g.fillStyle = state.theme === 'dark' ? '#e3e6ec' : '#11141b';
   g.font = `600 ${15 * scale}px "IBM Plex Sans", sans-serif`;
-  g.fillText(`VolumeLens · ${state.symbol} · ${DENSITY_LABEL[state.density]} volume candles`, 16 * scale, 28 * scale);
+  g.fillText(`VolumeLens · ${state.symbol} · ${TYPE_NAME[state.settings.chartType]} · ${DENSITY_LABEL[state.density]} box`, 16 * scale, 28 * scale);
   g.fillStyle = t.accent; g.font = `500 ${12 * scale}px "JetBrains Mono", monospace`; g.textAlign = 'right';
   g.fillText(`${$('day-label').textContent} · urgency ${$('day-score').textContent}`, out.width - 16 * scale, 28 * scale);
   g.textAlign = 'left'; g.fillStyle = t.text; g.font = `400 ${11 * scale}px "IBM Plex Sans", sans-serif`;

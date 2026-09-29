@@ -1,7 +1,7 @@
 // Chart overlays drawn as Lightweight Charts series primitives: they are painted with the chart
 // on every frame, so they cost nothing on hover and never force a data update.
 
-import { B, dayLabel, hhmm, xAt } from './util.js?v=43';
+import { B, dayLabel, hhmm, xAt } from './util.js?v=50';
 
 class Primitive {
   constructor() { this._view = { renderer: () => ({ draw: (t) => this._draw(t) }), zOrder: () => this.z }; this.z = 'bottom'; }
@@ -121,6 +121,75 @@ export class ClockOverlay extends Primitive {
         }
       }
       ctx.textAlign = 'start';
+    });
+  }
+}
+
+/**
+ * Volume Bricks. Each brick runs from the previous close to its own close (Renko grammar) and is
+ * painted here rather than by the candlestick renderer, so bricks keep a readable minimum height,
+ * rounded corners and an urgency glow. The brick being filled right now (live only) is an outline
+ * that fills as shares trade, labelled with its progress.
+ */
+export class BrickOverlay extends Primitive {
+  constructor(colors) { super(); this.colors = colors; this.z = 'normal'; this.s = { bricks: [], glow: [], forming: null }; }
+  set(s) { this.s = s; this.update(); }
+
+  _draw(target) {
+    const { bricks, glow, forming, lastClose, index } = this.s;
+    if (!bricks.length && !forming) return;
+    target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
+      const ts = this.chart.timeScale(), c = this.colors(), r = ts.getVisibleLogicalRange();
+      if (!r) return;
+      const spacing = ts.options().barSpacing, w = Math.max(1, spacing * 0.78), y = (p) => this.series.priceToCoordinate(p);
+      const i0 = Math.max(0, Math.floor(r.from) - 1), i1 = Math.min(bricks.length - 1, Math.ceil(r.to) + 1);
+      const round = w >= 5 ? 1.5 : 0;
+      const box = (x, top, h) => {
+        if (round && ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - w / 2, top, w, h, round); return true; }
+        return false;
+      };
+      if (glow.length && spacing >= 2.5) {
+        ctx.save();
+        ctx.shadowColor = c.accent; ctx.shadowBlur = Math.min(14, w * 1.4); ctx.fillStyle = `${c.accent}40`;
+        for (const g of glow) {
+          if (g.k < i0 || g.k > i1) continue;
+          const x = xAt(ts, g.k), a = y(g.hi), b = y(g.lo);
+          if (x == null || a == null || b == null) continue;
+          ctx.fillRect(x - w / 2, Math.min(a, b) - 1, w, Math.max(4, Math.abs(b - a) + 2));
+        }
+        ctx.restore();
+      }
+      for (let k = i0; k <= i1; k++) {
+        const p = bricks[k];
+        if (!p || !p.body) continue;
+        const x = xAt(ts, k), a = y(p.high), b = y(p.low);
+        if (x == null || a == null || b == null) continue;
+        const h = Math.max(3, b - a), top = h === 3 ? (a + b) / 2 - 1.5 : a;
+        ctx.fillStyle = p.body;
+        if (box(x, top, h)) ctx.fill(); else ctx.fillRect(x - w / 2, top, w, h);
+        if (w >= 3) {
+          ctx.strokeStyle = p.edge; ctx.lineWidth = 1;
+          if (round && ctx.roundRect) { ctx.beginPath(); ctx.roundRect(x - w / 2 + 0.5, top + 0.5, w - 1, h - 1, round); ctx.stroke(); }
+          else ctx.strokeRect(x - w / 2 + 0.5, top + 0.5, w - 1, h - 1);
+        }
+      }
+      if (forming && lastClose != null) {
+        const x = xAt(ts, index), a = y(lastClose), b = y(forming.price);
+        if (x == null || a == null || b == null || x > mediaSize.width + w) return;
+        const top = Math.min(a, b) - 2, h = Math.max(10, Math.abs(a - b) + 4), bw = Math.max(6, w);
+        ctx.save();
+        ctx.fillStyle = `${c.accent}33`;
+        ctx.fillRect(x - bw / 2, top + h * (1 - forming.frac), bw, h * forming.frac);
+        ctx.strokeStyle = c.accent; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
+        ctx.strokeRect(Math.round(x - bw / 2) + 0.5, Math.round(top) + 0.5, Math.round(bw), Math.round(h));
+        ctx.setLineDash([]);
+        ctx.font = '500 10.5px "JetBrains Mono", monospace'; ctx.textAlign = 'left';
+        const label = `${Math.round(forming.frac * 100)}% · ${forming.minutes} min`;
+        const tw = ctx.measureText(label).width + 10;
+        ctx.fillStyle = c.chip; ctx.fillRect(x + bw / 2 + 6, top + h / 2 - 9, tw, 18);
+        ctx.fillStyle = c.accent; ctx.fillText(label, x + bw / 2 + 11, top + h / 2 + 4);
+        ctx.restore();
+      }
     });
   }
 }

@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VolumeLens · Research</title>
+<meta name="description" content="How VolumeLens builds Volume Bricks and the Urgency Index, how it was tested, and what it does not claim.">
+<meta name="theme-color" content="#f5f2eb">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%2316150f'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23b4410f'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%2316150f'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/site.css?v=3">
+</head>
+<body>
+
+<header class="nav" id="nav">
+  <div class="wrap">
+    <a class="brand" href="index.html" aria-label="VolumeLens home"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="6" width="3" height="8" rx="1"/><rect class="hot" x="6.5" y="2" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="6" rx="1"/></svg>VolumeLens</a>
+    <nav class="nav-links" aria-label="Site">
+      <a href="index.html" class="hide-sm">Home</a>
+      <a href="research.html" aria-current="page">Research</a>
+    </nav>
+    <a class="btn small primary" href="terminal.html">Open terminal</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="doc">
+    <div class="meta reveal"><span><b>Research note</b></span><span>September 2026</span><span>Team 53 · HITS</span></div>
+    <h1 class="reveal d1">Volume-Normalized Market Representation for Quantitative Detection of Price–Flow Anomalies</h1>
+    <p class="sub reveal d2">How the charts are built, how the urgency signal was tested, and what it does not claim. Team 53, Hindustan Institute of Technology &amp; Science.</p>
+    <div class="toc reveal d3"><a class="btn small" href="#method">Method</a><a class="btn small" href="#results">Results</a><a class="btn small" href="#limits">Limits</a><a class="btn small" href="#reproduce">Reproduce</a></div>
+  </div>
+
+  <div class="doc-body">
+    <section id="method">
+      <div class="chapter-no"><b>01</b></div>
+      <h2>Method</h2>
+      <p><b>Data.</b> NSE cash-market 1-minute candles from AngelOne SmartAPI for 11 large caps (AXISBANK, HDFCBANK, ICICIBANK, INFY, ITC, PNB, RELIANCE, SBIN, TCS, TECHM, YESBANK), 85 sessions from June to September 2026, session window 09:30–15:29. A quality gate removes feed glitches (for example the day's running total reported as a minute's volume) before anything is built; every removal is published.</p>
+      <p><b>Volume Bricks.</b> Box size N is the stock's average daily volume over its previous 20 sessions divided by 75 (Small 150, Large 40). A brick closes at the end of the minute in which N shares have traded, and runs from the previous brick's close to its own close.</p>
+      <div class="formula">N          = mean daily volume (previous 20 sessions) / 75
+normal     = mean( median fill time of the last 50 bricks,
+                   median fill time in the same 30-min slot on previous sessions )
+pace       = fill time of the last 3 bricks / normal
+Urgency    = max(0, 1 − pace) × 100          urgent ≥ 60 · watch ≥ 30</div>
+      <p><b>Target.</b> A "large move" is a price range over the next 30 full minutes above twice the normal 30-minute range. Decisions are taken at the end of the minute a brick completes in; the outcome window starts at the next minute.</p>
+      <p><b>Alert model.</b> LightGBM with monotone constraints on five signals (5-minute volume vs normal, recent range, opening hour, fill pace, VPIN), percentile-calibrated, with TreeSHAP reasons for every alert.</p>
+    </section>
+
+    <section id="results">
+      <div class="chapter-no"><b>02</b></div>
+      <h2>Results</h2>
+      <p>Walk-forward: trained on earlier sessions only, one-session gap, tested on <b>74 unseen sessions</b> (37,292 bricks, 3,996 large moves, base rate 10.7%). 95% intervals from 1,000 block-bootstrap resamples of test sessions.</p>
+      <table class="t">
+        <thead><tr><th>After a brick that is…</th><th class="n">Bricks</th><th class="n">Range vs normal</th><th class="n">Large move follows</th></tr></thead>
+        <tbody>
+          <tr class="ours"><td>Urgent</td><td class="n">3,617</td><td class="n">1.53×</td><td class="n">31%</td></tr>
+          <tr><td>Watch</td><td class="n">6,693</td><td class="n">1.23×</td><td class="n">14%</td></tr>
+          <tr><td>Normal</td><td class="n">31,292</td><td class="n">1.02×</td><td class="n">7%</td></tr>
+        </tbody>
+      </table>
+      <p>Urgent vs all other bricks: <b>3.8× lift</b>, 3.3× outside the opening hour, 3.4–4.1× for every threshold from 0.30 to 0.50. Shuffling fill times within each session removes most of the effect (AUC 0.684 real vs 0.606 shuffled).</p>
+      <table class="t">
+        <thead><tr><th>Signal</th><th class="n">AUC</th><th class="n">95% CI</th><th class="n">Caught at equal alert rate</th></tr></thead>
+        <tbody>
+          <tr><td>VPIN (rebuilt)</td><td class="n">0.592</td><td class="n">0.553–0.626</td><td class="n">21%</td></tr>
+          <tr><td>Fill pace alone</td><td class="n">0.688</td><td class="n">0.658–0.713</td><td class="n">31%</td></tr>
+          <tr><td>5-minute volume spike</td><td class="n">0.703</td><td class="n">0.675–0.727</td><td class="n">30%</td></tr>
+          <tr><td>Last 30-minute range</td><td class="n">0.725</td><td class="n">0.693–0.753</td><td class="n">26%</td></tr>
+          <tr><td>Model on time-chart signals</td><td class="n">0.765</td><td class="n">0.739–0.787</td><td class="n">39%</td></tr>
+          <tr class="ours"><td>VolumeLens alerts</td><td class="n">0.763</td><td class="n">0.738–0.785</td><td class="n">39%</td></tr>
+        </tbody>
+      </table>
+      <p>VolumeLens beats VPIN by <b>+0.172 AUC</b> (95% CI +0.141 to +0.203) and on all 11 stocks; fill pace alone beats VPIN by +0.096. Against a model built on time-chart signals it is a tie (−0.002, CI −0.006 to +0.001).</p>
+    </section>
+
+    <section id="limits">
+      <div class="chapter-no"><b>03</b></div>
+      <h2>What we don't claim</h2>
+      <ul>
+        <li><b>Direction.</b> After 647 urgent zones price continued the same way 46% of the time, inside the chance range (46–54%). Urgency says a move is likely, not which way.</li>
+        <li><b>Who is trading.</b> Urgency is not proof of institutions, algorithms or news.</li>
+        <li><b>Beating a good time-chart model.</b> The alert score ties it; the value of the volume clock is seeing urgency on the chart, early and explained.</li>
+        <li><b>Sample.</b> 11 large caps over about four months, 1-minute data (fill times are whole minutes). Mid-caps, other years and tick data are untested.</li>
+        <li><b>Not investment advice.</b> An educational and research tool.</li>
+      </ul>
+    </section>
+
+    <section id="reproduce">
+      <div class="chapter-no"><b>04</b></div>
+      <h2>Reproduce it</h2>
+      <p>Everything above is produced by the code; tests guarantee no look-ahead and no repainting, and the live server produces exactly the batch output.</p>
+      <div class="formula">python run.py                 # build bricks, indicators, alerts
+python backtest.py            # walk-forward validation, bootstrap intervals
+python -m pytest -q           # 16 engine and live tests
+npx playwright test           # browser checks in Edge and Chrome</div>
+      <div class="cta" style="justify-content:flex-start"><a class="btn primary" href="terminal.html">Open the terminal</a><a class="btn" href="index.html">Back to home</a></div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>VolumeLens · Team 53, Hindustan Institute of Technology &amp; Science</span>
+    <span class="sp"></span>
+    <span>Educational tool, not investment advice</span>
+    <a href="https://www.tradingview.com/" target="_blank" rel="noopener">Charting by TradingView Lightweight Charts™</a>
+  </div>
+</footer>
+
+<script type="module" src="js/site.js?v=3"></script>
+</body>
+</html>

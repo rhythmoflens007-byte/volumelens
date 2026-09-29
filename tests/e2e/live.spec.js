@@ -19,7 +19,7 @@ const liveState = (page) => page.evaluate(() => {
 });
 
 test('live: streams today, matches the server, follows the newest candle and never repaints', async ({ page, request }) => {
-  await page.goto(`/?debug&live=${LIVE}#RELIANCE`);
+  await page.goto(`/terminal.html?debug&live=${LIVE}#RELIANCE`);
   await expect(page.locator('#live-badge')).toHaveText(/REPLAY · market time \d\d:\d\d/, { timeout: 20_000 });   // a replay never claims to be live
   await page.waitForFunction(() => window.vl?.state.series?.sessions.at(-1).live);
 
@@ -27,6 +27,12 @@ test('live: streams today, matches the server, follows the newest candle and nev
   expect(first.date).toBe('2026-09-29');
   expect(first.mode).toBe('simulated');
   expect(first.to).toBeGreaterThanOrEqual(first.upto - 1);            // newest candle in view
+
+  // the forming brick: shares since the last complete brick, as a share of the box
+  const f = await page.evaluate(() => window.vl.state.forming);
+  expect(f).not.toBeNull();
+  expect(f.frac).toBeGreaterThanOrEqual(0);
+  expect(f.frac).toBeLessThanOrEqual(1);
 
   // the chart holds exactly what the server published
   await expect.poll(async () => {
@@ -46,7 +52,7 @@ test('live: streams today, matches the server, follows the newest candle and nev
 
 test('live: a missing live server leaves the terminal fully usable', async ({ page }) => {
   page.on('console', () => {});
-  await page.goto('/?debug&live=http://127.0.0.1:8799#RELIANCE');
+  await page.goto('/terminal.html?debug&live=http://127.0.0.1:8799#RELIANCE');
   await page.waitForFunction(() => window.vl && window.vl.bars().length);
   await expect(page.locator('#live-badge')).toHaveText('Reconnecting…');
   errors = errors.filter((e) => !/ERR_CONNECTION_REFUSED|EventSource|8799/.test(e));

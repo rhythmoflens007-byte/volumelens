@@ -14,7 +14,7 @@ test.afterEach(async () => { expect(errors, errors.join('\n')).toEqual([]); });
 
 async function open(page, hash = '') {
   const t0 = Date.now();
-  await page.goto(`/?debug${hash ? `#${hash}` : ''}`);
+  await page.goto(`/terminal.html?debug${hash ? `#${hash}` : ''}`);
   await page.waitForFunction(() => window.vl && window.vl.state.symbol && window.vl.bars().length && document.getElementById('state-overlay').classList.contains('hidden'));
   await page.waitForTimeout(300);
   return Date.now() - t0;
@@ -91,7 +91,7 @@ test('ranges, go to session and densities keep the view consistent', async ({ pa
     await settle(page, 400);
     const size = await page.evaluate(() => window.vl.state.view.starts.at(-1).size);
     expect(size).toBeGreaterThan(0);
-    await expect(page.locator('#legend-vol')).toContainText('Volume candles · 1 =');       // the legend names the candle size
+    await expect(page.locator('#legend-vol')).toContainText(/Volume (Bricks|Candles) · 1 (brick|candle) =/);       // the legend names the box size
     expect(await page.evaluate(() => window.vl.state.density)).toBe(d);
     await expect(page.locator('#day-label')).toContainText('15 Jul');           // same place in time
   }
@@ -230,6 +230,46 @@ test('layers, theme, scanner and session list', async ({ page }) => {
   await expectInSync(page);
 });
 
+test('chart types: Volume Bricks follow the Renko rule, candles and line draw the same bars', async ({ page }) => {
+  await open(page);
+  await expect(page.locator('#ctype button.on')).toHaveText('Bricks');                  // bricks are the default
+  const bricks = await page.evaluate(() => {
+    const { volChart, bars } = window.vl, b = bars();
+    const data = volChart.panes()[0].getSeries()[0].data();
+    let continuous = true;
+    for (let k = 1; k < b.length; k++) {
+      const sameSession = b[k][15] === b[k - 1][15];
+      if (sameSession && data[k].open !== b[k - 1][5]) continuous = false;              // brick starts at the previous close
+      if (data[k].close !== b[k][5] || data[k].high !== Math.max(data[k].open, data[k].close)) continuous = false;
+    }
+    return { continuous, n: data.length, bars: b.length };
+  });
+  expect(bricks.continuous).toBe(true);
+  expect(bricks.n).toBe(bricks.bars);
+  await expect(page.locator('#legend-vol')).toContainText('Volume Bricks · 1 brick =');
+
+  await page.click('#ctype button[data-v=candles]');
+  const candles = await page.evaluate(() => {
+    const { volChart, bars } = window.vl, b = bars(), d = volChart.panes()[0].getSeries()[0].data();
+    return d.every((p, k) => p.open === b[k][2] && p.high === b[k][3] && p.low === b[k][4] && p.close === b[k][5]);
+  });
+  expect(candles).toBe(true);
+
+  await page.click('#ctype button[data-v=line]');
+  const line = await page.evaluate(() => {
+    const { volChart, bars } = window.vl, s = volChart.panes()[0].getSeries().find((x) => x.seriesType() === 'Area');
+    return { visible: s.options().visible, n: s.data().length, bars: bars().length };
+  });
+  expect(line).toEqual({ visible: true, n: line.bars, bars: line.bars });
+  await expect(page.locator('#status-data')).toContainText('Urgency Line');
+
+  await page.reload();                                                                   // remembered
+  await page.waitForFunction(() => window.vl && window.vl.bars().length);
+  await expect(page.locator('#ctype button.on')).toHaveText('Line');
+  await page.click('#ctype button[data-v=bricks]');
+  await expectLegendsPlaced(page);
+});
+
 test('chart settings: colour modes, thresholds, clock overlays, scales, saved and reset', async ({ page }) => {
   await open(page);
   const urgentShare = () => page.evaluate(() => { const b = window.vl.bars(); return b.filter((r) => r[12] === 2).length / b.length; });
@@ -263,7 +303,7 @@ test('chart settings: colour modes, thresholds, clock overlays, scales, saved an
 
   await page.click('[data-tab=candles]');
   await page.check('input[name=density][value=fine]');
-  await expect(page.locator('#density button.on')).toHaveText('Fine');
+  await expect(page.locator('#density button.on')).toHaveText('Small');
   await page.click('#settings button[value=done]');
   await expect(page.locator('#settings')).toBeHidden();
 
@@ -277,7 +317,7 @@ test('chart settings: colour modes, thresholds, clock overlays, scales, saved an
   await page.click('#settings-reset');
   await page.click('#settings button[value=done]');
   expect(await page.evaluate(() => window.vl.state.settings)).toMatchObject({ colorBy: 'both', urgent: 60, watch: 30, scale: 'normal', ribbon: false });
-  await expect(page.locator('#density button.on')).toHaveText('Standard');
+  await expect(page.locator('#density button.on')).toHaveText('Medium');
   expect(await urgentShare()).toBeCloseTo(base, 3);                   // defaults restore the engine's classes exactly
   await expectLegendsPlaced(page);
 });
@@ -291,7 +331,7 @@ test('snapshot downloads a PNG', async ({ page }) => {
 test('shows a clear error and recovers when data cannot load', async ({ page }) => {
   let fail = true;
   await page.route('**/data/index.json', (r) => (fail ? r.fulfill({ status: 503, body: '' }) : r.continue()));
-  await page.goto('/?debug');
+  await page.goto('/terminal.html?debug');
   await expect(page.locator('#state-overlay')).toContainText('Could not load');
   errors = errors.filter((e) => !e.includes('503'));
   fail = false;

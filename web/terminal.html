@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VolumeLens · Urgency terminal</title>
+<meta name="description" content="An urgency terminal for NSE stocks: candles built from shares traded, not minutes, so bursts of urgent volume that a time chart hides become visible. Open source, backtested, replayable.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%23565b66'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%23565b66'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css?v=50">
+</head>
+<body>
+<header class="toolbar">
+  <a class="brand" href="index.html" aria-label="VolumeLens home">
+    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="6" width="3" height="8" rx="1"/><rect class="hot" x="6.5" y="2" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="6" rx="1"/></svg>
+    <span class="word">VolumeLens</span>
+  </a>
+  <div class="symbol-picker">
+    <input id="symbol-input" type="text" autocomplete="off" spellcheck="false" aria-label="Symbol">
+    <ul id="symbol-list" class="dropdown" hidden></ul>
+  </div>
+  <div class="segmented" id="ctype" role="group" aria-label="Chart type" title="Volume Bricks · Volume Candles · Urgency Line"></div>
+  <div class="segmented" id="density" role="group" aria-label="Box size" title="Box size: Small ≈ 150, Medium ≈ 75, Large ≈ 40 per normal session"></div>
+  <div class="segmented" id="ranges" role="group" aria-label="Range">
+    <button data-range="1" title="Latest session">1D</button><button data-range="5" title="Last 5 sessions">5D</button><button data-range="21" title="Last month">1M</button><button data-range="all" title="All history">All</button>
+  </div>
+  <select id="session-select" aria-label="Go to session" title="Go to session (urgency %, ● = alerts)"></select>
+  <span id="live-badge" class="live-badge" hidden role="status" aria-live="polite"><i></i><span>Live</span></span>
+  <button id="replay-btn" class="btn replay-btn" title="Replay the session in view (R)"><svg viewBox="0 0 16 16"><path d="M4 3v10l9-5z" class="fill"/></svg><span>Replay</span></button>
+  <span class="chip" title="Every volume candle holds this many shares, set from the stock's previous 20 sessions">1 candle = <b id="size-chip" class="num">–</b> sh</span>
+  <div class="spacer"></div>
+  <details class="menu" id="layers">
+    <summary class="btn">Layers</summary>
+    <div class="menu-body">
+      <label><input type="checkbox" data-layer="compare"> Compare time chart</label>
+      <label><input type="checkbox" data-layer="shade"> Urgency on compare chart</label>
+      <label><input type="checkbox" data-layer="fill"> Fill time &amp; VPIN pane</label>
+      <label><input type="checkbox" data-layer="aai"> Absorption pane</label>
+      <label><input type="checkbox" data-layer="hollow"> Hollow candles (Volume Candles)</label>
+    </div>
+  </details>
+  <button id="settings-btn" class="btn icon-text" title="Chart settings (,)"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1"/></svg><span>Settings</span></button>
+  <button id="theme-btn" class="btn" title="Switch theme">Light</button>
+  <button id="help-btn" class="btn" title="How to read VolumeLens (?)">Help</button>
+</header>
+
+<main class="workspace">
+  <nav class="rail" aria-label="Chart tools">
+    <button class="tool active" data-tool="cursor" title="Cursor (V)" aria-label="Cursor"><svg viewBox="0 0 16 16"><path d="M4 2.5v10l2.8-2.6 1.9 4.1 1.6-.7-1.9-4.1H12z" class="fill"/></svg></button>
+    <button class="tool" id="magnet" title="Magnet: snap crosshair to candle prices (G)" aria-label="Magnet"><svg viewBox="0 0 16 16"><path d="M4 3v5a4 4 0 0 0 8 0V3M4 3h2.5v5a1.5 1.5 0 0 0 3 0V3H12"/></svg></button>
+    <span class="rail-sep"></span>
+    <button class="tool" data-tool="hline" title="Horizontal line (H)" aria-label="Horizontal line"><svg viewBox="0 0 16 16"><path d="M1.5 8h13"/><circle cx="8" cy="8" r="1.6" class="fill"/></svg></button>
+    <button class="tool" data-tool="trend" title="Trend line (T)" aria-label="Trend line"><svg viewBox="0 0 16 16"><path d="M3 12.5 13 3.5"/><circle cx="3" cy="12.5" r="1.6" class="fill"/><circle cx="13" cy="3.5" r="1.6" class="fill"/></svg></button>
+    <button class="tool" data-tool="zone" title="Zone (Z)" aria-label="Zone"><svg viewBox="0 0 16 16"><rect x="2.5" y="4" width="11" height="8" rx="1"/></svg></button>
+    <button class="tool" data-tool="measure" title="Measure (M)" aria-label="Measure"><svg viewBox="0 0 16 16"><path d="M2 11.5 11.5 2l2.5 2.5L4.5 14z"/><path d="M5 9.5 6.3 10.8M7 7.5l1.3 1.3M9 5.5l1.3 1.3"/></svg></button>
+    <span class="rail-sep"></span>
+    <button class="tool" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16"><path d="M5 5.5H10a3.5 3.5 0 0 1 0 7H6"/><path d="M7.5 3 5 5.5 7.5 8"/></svg></button>
+    <button class="tool" id="clear" title="Remove all drawings" aria-label="Remove all drawings"><svg viewBox="0 0 16 16"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 9h5.6l.7-9"/></svg></button>
+    <span class="rail-sep"></span>
+    <button class="tool" id="snapshot" title="Save chart as image (S)" aria-label="Save chart as image"><svg viewBox="0 0 16 16"><path d="M2.5 5h2.2l1.2-1.5h4.2L11.3 5h2.2v7.5h-11z"/><circle cx="8" cy="8.6" r="2.2"/></svg></button>
+    <button class="tool" id="fullscreen" title="Fullscreen (F)" aria-label="Fullscreen"><svg viewBox="0 0 16 16"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
+  </nav>
+
+  <section class="stage" id="stage">
+    <div class="pane-main" id="vol-wrap">
+      <div id="vol-chart" class="chart"></div>
+      <div class="legend" id="legend-vol"></div>
+      <div class="legend" id="legend-urg"></div>
+      <div class="legend" id="legend-fill" hidden></div>
+      <div class="legend" id="legend-aai" hidden></div>
+      <div class="unfold-card" id="unfold-card" hidden></div>
+      <span class="history-chip" id="history-chip" hidden>Loading earlier sessions…</span>
+      <button class="go-latest" id="go-latest" hidden title="Go to the latest session (L)" aria-label="Go to latest"><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/><path d="M12.5 3v10"/></svg></button>
+      <div class="state-overlay" id="state-overlay"><div class="skeleton"></div></div>
+    </div>
+    <div class="resizer" id="resizer" title="Drag to resize"></div>
+    <div class="pane-compare" id="time-wrap">
+      <div class="compare-head">
+        <span class="compare-title">Compare <span class="muted">time chart</span></span>
+        <div class="segmented" id="tf" role="group" aria-label="Time frame"></div>
+        <span class="hint muted">Click a candle to unfold it</span>
+        <button class="icon-btn" id="compare-close" title="Hide compare chart" aria-label="Hide compare chart"><svg viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></svg></button>
+      </div>
+      <div class="compare-body">
+        <div id="time-chart" class="chart"></div>
+        <div class="legend" id="legend-time"></div>
+      </div>
+    </div>
+    <div class="replay-bar" id="replay-bar" hidden>
+      <span class="replay-tag">Replay</span>
+      <span class="rp-session" id="rp-session"></span>
+      <button id="rp-back" class="icon-btn" title="Step back (←)" aria-label="Step back"><svg viewBox="0 0 16 16"><path d="M4 3v10M12.5 3 6 8l6.5 5z" class="fill"/></svg></button>
+      <button id="rp-play" class="icon-btn play" title="Play / pause (Space)" aria-label="Play / pause"><svg viewBox="0 0 16 16" id="rp-play-icon"><path d="M4.5 3v10l8.5-5z" class="fill"/></svg></button>
+      <button id="rp-fwd" class="icon-btn" title="Step forward (→)" aria-label="Step forward"><svg viewBox="0 0 16 16"><path d="M12 3v10M3.5 3 10 8l-6.5 5z" class="fill"/></svg></button>
+      <select id="rp-speed" title="Market minutes per real second" aria-label="Replay speed">
+        <option value="1">1 min/s</option>
+        <option value="3" selected>3 min/s</option>
+        <option value="10">10 min/s</option>
+        <option value="30">30 min/s</option>
+      </select>
+      <input id="rp-scrub" type="range" min="1" max="1" value="1" aria-label="Replay position">
+      <span id="rp-clock" class="rp-clock num">–</span>
+      <button id="rp-exit" class="btn" title="Leave replay (Esc)">Exit</button>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <section class="card day-card">
+      <header>Session urgency <span class="muted" id="day-label"></span></header>
+      <div class="score-row"><span id="day-score" class="score num">–</span><span class="score-note">of the session's shares traded in urgent candles</span></div>
+      <p class="day-size num" id="day-size"></p>
+      <button id="day-burst" class="burst" type="button" title="Focus the chart on this burst"></button>
+    </section>
+    <section class="card">
+      <header>Data window</header>
+      <dl class="dw" id="dw"></dl>
+    </section>
+    <section class="card">
+      <header>Alerts <span id="alert-count" class="muted"></span></header>
+      <ul id="alerts" class="alerts"></ul>
+    </section>
+    <section class="card">
+      <header>Scanner <span class="muted">latest session</span></header>
+      <table class="grid-table scanner"><thead><tr><th>Symbol</th><th>Urgency</th><th>Last</th><th>Chg</th></tr></thead><tbody id="scanner"></tbody></table>
+    </section>
+    <section class="card">
+      <header>Most urgent sessions</header>
+      <ul id="top-sessions" class="list"></ul>
+    </section>
+    <section class="card">
+      <header>Evidence <span class="muted">backtest</span></header>
+      <p class="proof" id="proof"></p>
+      <table class="grid-table results" id="results"></table>
+    </section>
+  </aside>
+</main>
+
+<footer class="statusbar">
+  <span id="status-data" class="num">Loading…</span>
+  <span class="spacer"></span>
+  <span>Educational tool, not investment advice</span>
+  <span class="dot">·</span>
+  <a href="https://www.tradingview.com/" target="_blank" rel="noopener">Charting by TradingView Lightweight Charts™</a>
+</footer>
+
+<dialog id="settings" class="settings" aria-labelledby="settings-title">
+  <form method="dialog" class="settings-form">
+    <header class="settings-head"><h2 id="settings-title">Chart settings</h2><button class="icon-btn" value="close" aria-label="Close">✕</button></header>
+    <div class="settings-body">
+      <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" role="tab" data-tab="candles" class="on">Chart</button>
+        <button type="button" role="tab" data-tab="style">Style</button>
+        <button type="button" role="tab" data-tab="urgency">Urgency</button>
+        <button type="button" role="tab" data-tab="clock">Clock</button>
+        <button type="button" role="tab" data-tab="scales">Scales</button>
+        <button type="button" role="tab" data-tab="panes">Panes</button>
+      </nav>
+      <div class="settings-panels">
+        <section data-panel="candles">
+          <h3>Chart type</h3>
+          <label class="opt"><input type="radio" name="chartType" data-set="chartType" value="bricks"><span><b>Volume Bricks</b> · a brick prints every time N shares trade; it runs from the previous close to this close, like Renko with volume in place of price</span></label>
+          <label class="opt"><input type="radio" name="chartType" data-set="chartType" value="candles"><span><b>Volume Candles</b> · open, high, low and close of each N-share slice</span></label>
+          <label class="opt"><input type="radio" name="chartType" data-set="chartType" value="line"><span><b>Urgency Line</b> · closes joined, coloured where urgency is high</span></label>
+          <h3>Box size (N shares)</h3>
+          <p class="note" id="set-size-note"></p>
+          <label class="opt"><input type="radio" name="density" value="fine"><span><b>Small</b> · about 150 per normal session</span></label>
+          <label class="opt"><input type="radio" name="density" value="standard"><span><b>Medium</b> · about 75 per normal session (used by the backtest)</span></label>
+          <label class="opt"><input type="radio" name="density" value="coarse"><span><b>Large</b> · about 40 per normal session</span></label>
+          <h3>Details</h3>
+          <label class="opt"><input type="checkbox" data-set="forming"><span><b>Forming brick</b> · during market hours, the next brick fills up as shares trade</span></label>
+          <label class="opt"><input type="checkbox" data-layer="hollow"><span>Hollow up candles (Volume Candles)</span></label>
+        </section>
+        <section data-panel="style" hidden>
+          <h3>Colour candles by</h3>
+          <label class="opt"><input type="radio" name="colorBy" data-set="colorBy" value="both"><span><i class="sw" style="--a:#1fa37a;--b:#ff9800;--c:#e5484d"></i><b>Direction + urgent</b> · green and red, urgent candles amber</span></label>
+          <label class="opt"><input type="radio" name="colorBy" data-set="colorBy" value="heat"><span><i class="sw" style="--a:#4a505d;--b:#ff9800;--c:#ff5a1f"></i><b>Urgency heat</b> · grey when calm, amber to orange as urgency rises; up candles hollow</span></label>
+          <label class="opt"><input type="radio" name="colorBy" data-set="colorBy" value="direction"><span><i class="sw" style="--a:#1fa37a;--b:#1fa37a;--c:#e5484d"></i><b>Direction only</b> · green and red</span></label>
+        </section>
+        <section data-panel="urgency" hidden>
+          <h3>Thresholds (Urgency Index 0–100)</h3>
+          <label class="row">Urgent from <input type="range" min="40" max="90" step="5" data-set="urgent"><output id="out-urgent"></output></label>
+          <label class="row">Watch from <input type="range" min="10" max="60" step="5" data-set="watch"><output id="out-watch"></output></label>
+          <p class="note">Urgency Index = (1 − pace) × 100, where pace is the fill time of the last 3 candles against normal. 60 means they filled 2.5× faster than normal. Backtest figures use the defaults, 60 and 30.</p>
+        </section>
+        <section data-panel="clock" hidden>
+          <h3>Make the volume clock visible</h3>
+          <label class="opt"><input type="checkbox" data-set="bands"><span><b>Time bands</b> · shade every other stretch of clock time; wide bands are busy, thin bands are quiet</span></label>
+          <label class="row">Band length <select data-set="bandMin" aria-label="Band length"><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
+          <label class="opt"><input type="checkbox" data-set="ribbon"><span><b>Pace ribbon</b> · heat strip of the Urgency Index along the bottom of the chart</span></label>
+          <label class="opt"><input type="checkbox" data-set="badges"><span><b>Wide-candle marks</b> · ×N when one minute alone filled N candles</span></label>
+        </section>
+        <section data-panel="scales" hidden>
+          <h3>Price scale</h3>
+          <label class="opt"><input type="radio" name="scale" data-set="scale" value="normal"><span>Normal</span></label>
+          <label class="opt"><input type="radio" name="scale" data-set="scale" value="log"><span>Logarithmic</span></label>
+          <label class="opt"><input type="radio" name="scale" data-set="scale" value="percent"><span>Percent from the first candle in view</span></label>
+        </section>
+        <section data-panel="panes" hidden>
+          <h3>Panes and overlays</h3>
+          <label class="opt"><input type="checkbox" data-layer="compare"><span>Compare time chart</span></label>
+          <label class="opt"><input type="checkbox" data-layer="shade"><span>Urgency on compare chart</span></label>
+          <label class="opt"><input type="checkbox" data-layer="fill"><span>Fill time &amp; VPIN pane</span></label>
+          <label class="opt"><input type="checkbox" data-layer="aai"><span>Absorption pane</span></label>
+        </section>
+      </div>
+    </div>
+    <footer class="settings-foot"><button type="button" class="btn" id="settings-reset">Reset to defaults</button><button class="btn primary" value="done">Done</button></footer>
+  </form>
+</dialog>
+
+<div id="intro" class="intro" hidden role="dialog" aria-labelledby="intro-title">
+  <div class="intro-card">
+    <p class="intro-kicker">VolumeLens</p>
+    <h1 id="intro-title">See when the market is in a hurry.</h1>
+    <p class="intro-lead">A normal chart draws a candle every 5 minutes, busy or not. VolumeLens draws a <b>brick every time a fixed number of shares trade</b>, so bursts of urgent trading can't hide.</p>
+    <div class="intro-fact"><span class="big">4</span><span>five-minute candles</span><span class="vs">vs</span><span class="big hot">10</span><span>urgent bricks</span></div>
+    <p class="intro-note">RELIANCE, 29 Sep, 09:30–09:46: the same 16 minutes, charted by time and by shares.</p>
+    <div class="intro-actions"><button class="btn primary" id="intro-go">Show me the burst</button><button class="btn" id="intro-skip">Explore the terminal</button></div>
+  </div>
+</div>
+
+<dialog id="help">
+  <h2>Reading VolumeLens</h2>
+  <dl>
+    <dt>Volume Bricks</dt>
+    <dd>A brick prints every time N shares trade, not after a fixed time. It runs from the previous brick's close to its own close, like Renko with volume in place of price. N adapts per stock from its previous 20 sessions (Small ≈ 150, Medium ≈ 75, Large ≈ 40 bricks a day). Busy stretches print many bricks; quiet ones print few. Urgent bricks glow.</dd>
+    <dt>Urgency Index (0–100)</dt>
+    <dd>How much faster than normal the last 3 candles filled. 60 and above is urgent (amber): under 40% of the normal time. 30–60 is watch. In testing, a large move (30-minute range over 2× normal) followed urgent candles several times as often as normal ones. Urgency means something is happening; it does not say which way the price will go.</dd>
+    <dt>Compare chart</dt>
+    <dd>A normal 1–30 minute time chart of the same stretch. Amber columns contain urgent volume. Click any candle to unfold it into the volume candles inside.</dd>
+    <dt>Replay</dt>
+    <dd>Plays the session in view at market pace. Every value on screen was computable at that moment; nothing is redrawn later (verified by automated tests).</dd>
+    <dt>Navigation</dt>
+    <dd>Scroll to zoom, drag to pan, drag an axis to stretch it, double-click an axis to reset. Earlier sessions load as you scroll left. 1D / 5D / 1M / All set the range.</dd>
+    <dt>Keys</dt>
+    <dd><kbd>V</kbd> cursor · <kbd>H</kbd> line · <kbd>T</kbd> trend · <kbd>Z</kbd> zone · <kbd>M</kbd> measure · <kbd>G</kbd> magnet · <kbd>Ctrl Z</kbd> undo · <kbd>S</kbd> snapshot · <kbd>F</kbd> fullscreen · <kbd>L</kbd> latest · <kbd>R</kbd> replay · <kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> step · <kbd>Esc</kbd> back</dd>
+  </dl>
+  <form method="dialog"><button class="btn">Close</button></form>
+</dialog>
+
+<script src="vendor/lightweight-charts.standalone.production.js"></script>
+<script type="module" src="js/main.js?v=50"></script>
+</body>
+</html>
