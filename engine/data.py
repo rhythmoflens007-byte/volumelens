@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 
 from . import config as C
+from . import quality
 
 
 def load_minutes(csv_path: str | Path) -> pd.DataFrame:
@@ -22,6 +23,9 @@ def load_minutes(csv_path: str | Path) -> pd.DataFrame:
     for col in ["open", "high", "low", "close", "volume"]:
         df[col] = pd.to_numeric(df[col], errors="coerce")
     df = df.dropna(subset=["open", "high", "low", "close", "volume"])
+    df["date"] = df["ts"].dt.strftime("%Y-%m-%d")
+    df["hm"] = df["ts"].dt.strftime("%H:%M")
+    df, issues = quality.clean(df, Path(csv_path).stem.upper())
 
     # Bulk volume classification (Easley, Lopez de Prado & O'Hara): the share of a minute's
     # volume that was buyer-initiated = Phi(price change / sigma), sigma from past minutes only.
@@ -31,9 +35,8 @@ def load_minutes(csv_path: str | Path) -> pd.DataFrame:
     df["buy_frac"] = _norm_cdf(z.to_numpy()).clip(0, 1)
     df.loc[sigma.isna() | (sigma == 0) | dp.isna(), "buy_frac"] = 0.5
 
-    df["date"] = df["ts"].dt.strftime("%Y-%m-%d")
-    df["hm"] = df["ts"].dt.strftime("%H:%M")
     df["epoch"] = (df["ts"] - pd.Timestamp("1970-01-01", tz="UTC")) // pd.Timedelta(seconds=1)
+    df.attrs["quality"] = issues
     return df
 
 

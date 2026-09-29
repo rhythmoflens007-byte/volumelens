@@ -50,6 +50,9 @@ def _speed_classes(b: pd.DataFrame) -> None:
     fill_k = by_day["fill_min"].transform(lambda s: s.rolling(C.PACE_BARS, min_periods=1).sum())
     base_k = by_day["baseline_min"].transform(lambda s: s.rolling(C.PACE_BARS, min_periods=1).sum())
     b["pace"] = fill_k / base_k
+    # Urgency Index, 0-100: how much faster than normal the last 3 candles filled.
+    # 0 = at or slower than normal, 60+ = urgent (pace under 0.40), 30+ = watch (pace under 0.70).
+    b["urgency"] = ((1 - b["pace"]).clip(lower=0) * 100).round(1)
     fast = (b["pace"] < C.FAST_RATIO).fillna(False)
     watch = (~fast & (b["pace"] < C.WATCH_RATIO)).fillna(False)
     b["speed"] = np.where(fast, "fast", np.where(watch, "watch", "normal"))

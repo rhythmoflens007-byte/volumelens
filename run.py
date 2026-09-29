@@ -1,6 +1,7 @@
-"""VolumeLens pipeline: CSV minutes -> volume bars -> indicators -> AI model -> web/data JSON.
+"""VolumeLens pipeline: CSV minutes -> quality gate -> volume candles -> indicators -> model
+-> web/data (one index plus one file per stock per session).
 
-    python run.py            # all CSVs in ./data
+    python run.py
 """
 
 import json
@@ -16,92 +17,99 @@ from engine import bars as B, config as C, data, indicators as I, labels as L, m
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "web" / "data"
+SPEED = {"normal": 0, "watch": 1, "fast": 2}
 
 
-def build_symbol(csv: Path) -> tuple[pd.DataFrame, pd.DataFrame, dict]:
+def build_symbol(csv: Path, bars_per_day: int | None = None, labels: bool = True):
+    """Volume candles with indicators (and labels) for one stock. Returns bars, session minutes, sizes, quality issues."""
     minutes = data.load_minutes(csv)
     sess = data.session(minutes)
-    sizes = B.daily_bar_sizes(sess)
+    sizes = B.daily_bar_sizes(sess, bars_per_day)
     bars = I.add_indicators(B.build_bars(sess, sizes))
-    bars = L.add_labels(bars, sess)
+    if labels:
+        bars = L.add_labels(bars, sess)
     bars["symbol"] = csv.stem.upper()
-    return bars, sess, sizes
+    return bars, sess, sizes, minutes.attrs.get("quality", [])
 
 
 def main() -> None:
     t0 = time.time()
-    frames, sessions, sizes = [], {}, {}
+    std, sessions, sizes, other, issues = [], {}, {}, {}, []
     for csv in sorted((ROOT / "data").glob("*.csv")):
-        b, sess, sz = build_symbol(csv)
-        frames.append(b)
-        sessions[b["symbol"].iat[0]] = sess
-        sizes[b["symbol"].iat[0]] = sz
-        print(f"{csv.stem:10s} {b['date'].nunique():3d} days {len(b):5d} bars")
-    df = M.add_features(pd.concat(frames, ignore_index=True))
+        sym = csv.stem.upper()
+        b, sess, sz, q = build_symbol(csv, C.DENSITIES["standard"])
+        std.append(b); sessions[sym] = sess; issues += q
+        sizes[sym] = {"standard": sz}
+        other[sym] = {}
+        for name in ("fine", "coarse"):
+            ob, _, osz, _ = build_symbol(csv, C.DENSITIES[name], labels=False)
+            other[sym][name] = ob; sizes[sym][name] = osz
+        print(f"{sym:10s} {b['date'].nunique():3d} sessions {len(b):6d} standard candles")
+    df = M.add_features(pd.concat(std, ignore_index=True))
 
     oos, folds = M.walk_forward(df)
-    fast_rate = float((df["speed"] == "fast").mean())
-    results = M.evaluate(oos, fast_rate)
-    results["folds"] = len(folds)
-    results["test_days"] = sorted({d for f in folds for d in f["test_days"]})
-    results["features"] = M.FEATURES
-    results["urgency"] = U.event_study(df)
+    results = M.evaluate(oos, float((df["speed"] == "fast").mean()))
+    results.update(folds=len(folds), test_days=sorted({d for f in folds for d in f["test_days"]}),
+                   features=M.FEATURES, urgency=U.event_study(df))
     u = results["urgency"]["all_day"]
-    print(f"urgency: big move after urgent bars {u['urgent']:.1%} vs {u['other']:.1%} ({u['lift']:.1f}x)")
-    print(json.dumps({k: results[k] for k in ("rows", "big_moves", "base_rate", "auc", "catch_rate", "precision")}, indent=1))
+    print(f"urgency: large move after urgent candles {u['urgent']:.1%} vs {u['other']:.1%} ({u['lift']:.2f}x)")
+    print("AUC", {k: round(v, 3) for k, v in results["auc"].items()})
 
     probs, contrib = M.cross_fit(df)
     alerts = M.pick_alerts(df, probs, contrib)
-    print(f"alerts: {len(alerts)} (threshold p >= {alerts.attrs['threshold']:.3f})")
-    export(df.assign(prob=probs), alerts, sessions, sizes, results)
+    print(f"alerts: {len(alerts)}")
+    export(df.assign(prob=probs), other, alerts, sessions, sizes, results, issues)
     print(f"done in {time.time() - t0:.1f}s")
 
 
-def export(df, alerts, sessions, sizes, results) -> None:
+def _rows(day: pd.DataFrame) -> list:
+    return [[int(r.end) + C.IST_OFFSET_SECONDS, int(r.start) + C.IST_OFFSET_SECONDS,
+             _r(r.open), _r(r.high), _r(r.low), _r(r.close), int(r.volume),
+             _r(r.fill_min, 2), _r(r.fill_smooth, 2), _r(r.baseline_min, 2), _r(r.pace, 3), _r(r.urgency, 1),
+             SPEED[r.speed], _r(r.vpin, 3), _r(r.aai_smooth, 2)]
+            for r in day.itertuples()]
+
+
+def export(df, other, alerts, sessions, sizes, results, issues) -> None:
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
     alert_by_idx = {int(a["index"]): a for a in alerts.to_dict("records")} if len(alerts) else {}
-    index = {"generated": time.strftime("%Y-%m-%d %H:%M"), "stocks": [], "results": _clean(results),
-             "settings": {"bars_per_day": C.BARS_PER_DAY, "lookback_days": C.LOOKBACK_DAYS,
-                          "fast": C.FAST_RATIO, "watch": C.WATCH_RATIO, "pace_bars": C.PACE_BARS,
-                          "vpin_window": C.VPIN_WINDOW, "label": f"range over next {C.LABEL_HORIZON_MIN} min > {C.LABEL_MULTIPLIER}x normal"}}
+    index = {"generated": time.strftime("%Y-%m-%d %H:%M"), "densities": C.DENSITIES, "stocks": [],
+             "results": _clean(results), "quality": issues,
+             "settings": {"lookback_sessions": C.LOOKBACK_DAYS, "urgent_index": C.URGENT_INDEX, "watch_index": C.WATCH_INDEX,
+                          "pace_bars": C.PACE_BARS, "vpin_window": C.VPIN_WINDOW,
+                          "target": f"range over next {C.LABEL_HORIZON_MIN} min > {C.LABEL_MULTIPLIER}x normal"}}
     for sym, g in df.groupby("symbol"):
         (OUT / sym).mkdir()
         sess = sessions[sym]
-        dates = sorted(g["date"].unique())
-        day_meta = []
-        for date in dates:
+        meta = []
+        for date in sorted(g["date"].unique()):
             day = g[g["date"] == date]
-            minutes = L.time_candles(sess, date, minutes=1)     # the browser builds any time frame from these
-            day_alerts, rows, used = [], [], set()
-            for i, (idx, r) in enumerate(day.iterrows()):
-                t = int(round(r["end"])) + C.IST_OFFSET_SECONDS
-                while t in used:                                  # charts need unique times
-                    t += 1
-                used.add(t)
-                rows.append([t, int(round(r["start"])) + C.IST_OFFSET_SECONDS,
-                             _r(r["open"]), _r(r["high"]), _r(r["low"]), _r(r["close"]),
-                             _r(r["fill_min"], 3), _r(r["fill_smooth"], 3), _r(r["baseline_min"], 3),
-                             _r(r["pace"], 3), {"normal": 0, "watch": 1, "fast": 2}[r["speed"]],
-                             int(r["zone"]), _r(r["vpin"], 4), _r(r["aai"], 3), _r(r["aai_smooth"], 3),
-                             _r(r["prob"], 4)])
+            day_alerts = []
+            rows = _rows(day)
+            for i, idx in enumerate(day.index):
                 if idx in alert_by_idx:
                     a = alert_by_idx[idx]
-                    day_alerts.append({"i": i, "t": t, "prob": round(a["prob"], 3), "kind": a["kind"], "reasons": a["reasons"]})
-            payload = {"symbol": sym, "date": date, "barSize": sizes[sym][date],
+                    day_alerts.append({"i": i, "t": rows[i][0], "prob": round(a["prob"], 3), "kind": a["kind"], "reasons": a["reasons"]})
+            minutes = L.time_candles(sess, date, minutes=1)
+            bars = {"standard": rows}
+            for name in ("fine", "coarse"):
+                ob = other[sym][name]
+                bars[name] = _rows(ob[ob["date"] == date])
+            payload = {"symbol": sym, "date": date,
+                       "size": {k: sizes[sym][k].get(date) for k in C.DENSITIES},
                        "minutes": [[int(c.time) + C.IST_OFFSET_SECONDS, _r(c.open), _r(c.high), _r(c.low), _r(c.close), int(c.volume)]
                                    for c in minutes.itertuples()],
-                       "bars": rows, "alerts": day_alerts}
-            stats = U.day_stats(day)
-            payload["urgency"] = stats
+                       "bars": bars, "alerts": day_alerts}
             (OUT / sym / f"{date}.json").write_text(json.dumps(payload, separators=(",", ":")))
-            day_meta.append({"date": date, "alerts": len(day_alerts), "bars": len(rows),
-                             "close": _r(day["close"].iat[-1]), "open": _r(day["open"].iat[0]), **stats})
-        last, prev = day_meta[-1], (day_meta[-2] if len(day_meta) > 1 else day_meta[-1])
-        index["stocks"].append({"symbol": sym, "dates": day_meta, "last": last["close"],
+            meta.append({"date": date, "alerts": len(day_alerts), "candles": len(rows),
+                         "size": payload["size"], "open": _r(day["open"].iat[0]), "close": _r(day["close"].iat[-1]),
+                         **U.day_stats(day)})
+        last, prev = meta[-1], (meta[-2] if len(meta) > 1 else meta[-1])
+        index["stocks"].append({"symbol": sym, "sessions": meta, "last": last["close"],
                                 "change": _r((last["close"] / prev["close"] - 1) * 100, 2)})
-    (OUT / "index.json").write_text(json.dumps(index, indent=1))
+    (OUT / "index.json").write_text(json.dumps(index, separators=(",", ":")))
     (ROOT / "results.json").write_text(json.dumps(_clean(results), indent=1))
 
 

@@ -1,9 +1,13 @@
-"""Adaptive volume bars with sub-minute fill timing.
+"""Adaptive, minute-aligned volume candles.
 
-Each bar holds exactly `size` shares. `size` is set per day from the average session volume
-of up to 20 *previous* complete days, so it adapts to each stock without using future data.
-1-minute data only tells us how much traded in a minute, so when a bar fills part-way through
-a minute we assume volume and price flowed evenly through that minute and split it.
+A candle collects consecutive 1-minute candles until at least `size` shares have traded, then
+closes at the end of that minute. So every candle's open, high, low and close are real market
+prices, and a very heavy minute becomes a single candle holding a multiple of `size` (its
+`multiple`), instead of being split into artificial slices.
+
+`size` is set per session from the average session volume of up to 20 *previous* complete
+sessions divided by the target candles per session, so it adapts to each stock without using
+future data. Candles never cross a session.
 """
 
 import numpy as np
@@ -12,66 +16,55 @@ import pandas as pd
 from . import config as C
 
 
-def daily_bar_sizes(sess: pd.DataFrame) -> dict[str, int]:
-    """Map each date to its volume-bar size, using previous complete days only."""
-    per_day = sess.groupby("date").agg(volume=("volume", "sum"), minutes=("volume", "size"))
+def daily_bar_sizes(sess: pd.DataFrame, bars_per_day: int | None = None) -> dict[str, int]:
+    """Map each date to its candle size, using previous complete sessions only."""
+    per_day = bars_per_day or C.BARS_PER_DAY
+    by_day = sess.groupby("date").agg(volume=("volume", "sum"), minutes=("volume", "size"))
     sizes: dict[str, int] = {}
     history: list[float] = []
-    for date, row in per_day.iterrows():
+    for date, row in by_day.iterrows():
         if len(history) >= C.MIN_HISTORY_DAYS:
-            avg = float(np.mean(history[-C.LOOKBACK_DAYS:]))
-            sizes[date] = _nice_round(avg / C.BARS_PER_DAY)
+            sizes[date] = _nice_round(float(np.mean(history[-C.LOOKBACK_DAYS:])) / per_day)
         if row["minutes"] >= C.FULL_DAY_MIN_MINUTES:
             history.append(float(row["volume"]))
     return sizes
 
 
 def build_bars(sess: pd.DataFrame, sizes: dict[str, int]) -> pd.DataFrame:
-    """Volume bars for every date that has a size. Bars never cross a trading day."""
+    """Volume candles for every session that has a size."""
     frames = [_build_day(day, sizes[date]) for date, day in sess.groupby("date") if date in sizes]
     frames = [f for f in frames if len(f)]
     if not frames:
         return pd.DataFrame()
     bars = pd.concat(frames, ignore_index=True)
     bars["fill_min"] = (bars["end"] - bars["start"]) / 60.0
+    bars["multiple"] = bars["volume"] / bars["size"]
     return bars
 
 
 def _build_day(day: pd.DataFrame, size: int) -> pd.DataFrame:
     rows = []
-    cum = 0.0
-    buy = 0.0
+    cum = buy = 0.0
     o = h = l = start = None
+    date = day["date"].iat[0]
     for t, O, H, L, Cl, V, bf in day[["epoch", "open", "high", "low", "close", "volume", "buy_frac"]].itertuples(index=False):
         if V <= 0:
             continue
-        remaining = float(V)
-        pos = 0.0                                   # fraction of this minute already used
-        while remaining > 1e-9:
-            take = min(size - cum, remaining)
-            end_frac = min(1.0, pos + take / V)
-            p0 = O + (Cl - O) * pos                 # price assumed to move evenly within the minute
-            p1 = O + (Cl - O) * end_frac
-            whole = pos == 0.0 and end_frac >= 1.0
-            seg_hi = H if whole else max(p0, p1)
-            seg_lo = L if whole else min(p0, p1)
-            if cum == 0.0:
-                o, h, l, start = p0, seg_hi, seg_lo, t + pos * 60.0
-            else:
-                h, l = max(h, seg_hi), min(l, seg_lo)
-            cum += take
-            buy += take * bf
-            remaining -= take
-            pos = end_frac
-            if cum >= size - 1e-6:
-                rows.append((day["date"].iat[0], start, t + end_frac * 60.0, o, h, l, p1, size, buy))
-                cum, buy = 0.0, 0.0
-    # the unfinished last bar of the day is dropped: it never reached its share target
-    return pd.DataFrame(rows, columns=["date", "start", "end", "open", "high", "low", "close", "volume", "buy_vol"])
+        if cum == 0:
+            o, h, l, start = O, H, L, t
+        else:
+            h, l = max(h, H), min(l, L)
+        cum += V
+        buy += V * bf
+        if cum >= size:
+            rows.append((date, start, t + 60, o, h, l, Cl, cum, buy, size))
+            cum = buy = 0.0
+    # the unfinished last candle of the session is dropped: it never reached its size
+    return pd.DataFrame(rows, columns=["date", "start", "end", "open", "high", "low", "close", "volume", "buy_vol", "size"])
 
 
 def _nice_round(x: float) -> int:
-    """Round to 2 significant figures so bar sizes read cleanly (e.g. 216,000)."""
+    """Round to 2 significant figures so sizes read cleanly (e.g. 1,80,000)."""
     if x <= 0:
         return 1000
     mag = 10 ** (int(np.floor(np.log10(x))) - 1)
