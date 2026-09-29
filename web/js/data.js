@@ -1,7 +1,7 @@
 // Loading market data. index.json lists every stock and session; each session is its own file,
 // so a stock opens fast (latest sessions first) and earlier history streams in behind it.
 
-import { B } from './util.js?v=35';
+import { B } from './util.js?v=37';
 
 const cache = new Map();
 
@@ -54,6 +54,20 @@ export class Series {
     const add = await Promise.all(dates.slice(Math.max(0, first - n), first).map((d) => loadSession(this.symbol, d)));
     this.sessions = [...add, ...this.sessions];
     return add.length;
+  }
+
+  /** Add or replace today's session from the live server. Returns true if it was a new session. */
+  upsertLive(payload) {
+    const last = this.sessions.at(-1);
+    if (last && last.date > payload.date) return false;
+    const fresh = !last || last.date !== payload.date;
+    if (fresh) this.sessions.push(payload); else this.sessions[this.sessions.length - 1] = payload;
+    const st = payload.live?.stats || {};
+    let m = this.meta.find((x) => x.date === payload.date);
+    if (!m) { m = { date: payload.date, alerts: 0, live: true }; this.meta.push(m); }
+    if (m.live) Object.assign(m, { candles: payload.bars.standard.length, size: payload.size,
+      urgency_score: st.urgency_score ?? 0, burst: st.burst });
+    return fresh;
   }
 
   /** Continuous arrays for a density. */

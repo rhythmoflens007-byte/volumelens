@@ -1,7 +1,7 @@
 // Chart overlays drawn as Lightweight Charts series primitives: they are painted with the chart
 // on every frame, so they cost nothing on hover and never force a data update.
 
-import { dayLabel, xAt } from './util.js?v=35';
+import { dayLabel, xAt } from './util.js?v=37';
 
 class Primitive {
   constructor() { this._view = { renderer: () => ({ draw: (t) => this._draw(t) }), zOrder: () => this.z }; this.z = 'bottom'; }

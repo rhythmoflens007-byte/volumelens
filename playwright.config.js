@@ -1,5 +1,8 @@
 // End-to-end tests for the VolumeLens terminal: npx playwright test
+const path = require('path');
 const { defineConfig } = require('@playwright/test');
+
+const PY = process.platform === 'win32' ? path.join('.venv', 'Scripts', 'python.exe') : '.venv/bin/python';
 
 module.exports = defineConfig({
   testDir: 'tests/e2e',
@@ -12,13 +15,20 @@ module.exports = defineConfig({
     viewport: { width: 1440, height: 900 },
     acceptDownloads: true,
   },
-  webServer: {
-    command: process.platform === 'win32'
-      ? '.venv\\Scripts\\python.exe -m http.server 8777 --bind 127.0.0.1 --directory web'
-      : '.venv/bin/python -m http.server 8777 --bind 127.0.0.1 --directory web',
-    url: 'http://127.0.0.1:8777/index.html',
-    reuseExistingServer: true,
-  },
+  webServer: [
+    {
+      command: `${PY} -m http.server 8777 --bind 127.0.0.1 --directory web`,
+      url: 'http://127.0.0.1:8777/index.html',
+      reuseExistingServer: true,
+    },
+    {
+      // the live server, replaying a recorded session through the live path
+      command: `${PY} -m live.server RELIANCE --simulate 2026-09-29 --speed 60 --port 8788`,
+      url: 'http://127.0.0.1:8788/status',
+      reuseExistingServer: true,
+      timeout: 60_000,
+    },
+  ],
   projects: [
     { name: 'edge', use: { channel: 'msedge' } },
     { name: 'chrome', use: { channel: 'chrome' } },

@@ -328,3 +328,15 @@ dialog form .btn { border-color: var(--line); color: var(--text); }
 .dw .urgent { color: var(--accent); font-weight: 500; }
 .dw .watch { color: var(--accent); opacity: .75; }
 @media (max-width: 1280px) { #ranges, .chip { display: none; } }
+
+/* live badge */
+.live-badge { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 9px; border-radius: 12px;
+  font: 500 11px/1 'JetBrains Mono', ui-monospace, monospace; letter-spacing: .04em; color: var(--text-2);
+  border: 1px solid var(--line); white-space: nowrap; }
+.live-badge[hidden] { display: none; }
+.live-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--text-3); }
+.live-badge.on i { background: #1fa37a; box-shadow: 0 0 0 0 rgba(31,163,122,.6); animation: live-pulse 2s infinite; }
+.live-badge.sim i { background: var(--accent, #ff9800); }
+.live-badge.off { color: var(--text-3); }
+@keyframes live-pulse { 70% { box-shadow: 0 0 0 6px rgba(31,163,122,0); } 100% { box-shadow: 0 0 0 0 rgba(31,163,122,0); } }
+@media (prefers-reduced-motion: reduce) { .live-badge.on i { animation: none; } }

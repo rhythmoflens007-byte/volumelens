@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level } from './util.js?v=35';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=35';
-import { loadIndex, Series } from './data.js?v=35';
-import { createTools } from './tools.js?v=35';
-import { SessionSeparators, CompareBands } from './overlays.js?v=35';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level } from './util.js?v=37';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=37';
+import { loadIndex, Series } from './data.js?v=37';
+import { createTools } from './tools.js?v=37';
+import { SessionSeparators, CompareBands } from './overlays.js?v=37';
 
 const LWC = window.LightweightCharts;
 
@@ -284,6 +284,7 @@ async function openStock(symbol, date = null) {
   overlay(null);
   renderScanner();
   history.replaceState(null, '', `#${symbol}${date ? `/${date}` : ''}`);
+  connectLive(symbol);
 }
 
 /** Rebuild the continuous arrays for the current density (and keep the same time in view). */
@@ -324,6 +325,66 @@ async function loadEarlierIfNeeded(range) {
   $('history-chip').hidden = true;
 }
 
+// ================================================================ live
+// Today's session streams from the live server (live/server.py) as Server-Sent Events, in the same
+// format as the history files, so a live update is just a replaced last session.
+const live = { url: '', source: null, symbol: null, retry: null };
+
+async function liveConfig() {
+  const q = new URLSearchParams(location.search).get('live');
+  if (q != null) return q.replace(/\/$/, '');
+  try { return ((await (await fetch('live.json', { cache: 'no-cache' })).json()).url || '').replace(/\/$/, ''); }
+  catch (e) { return ''; }
+}
+
+function setLiveBadge(kind, text) {
+  const el = $('live-badge');
+  el.hidden = !kind;
+  el.className = `live-badge ${kind || ''}`;
+  el.querySelector('span').textContent = text || '';
+}
+
+function connectLive(symbol) {
+  if (live.source) live.source.close();
+  clearTimeout(live.retry);
+  live.source = null;
+  if (!live.url) return;
+  live.symbol = symbol;
+  const src = new EventSource(`${live.url}/stream?symbol=${encodeURIComponent(symbol)}`);
+  live.source = src;
+  src.onmessage = (e) => { try { onLive(JSON.parse(e.data)); } catch (err) { /* ignore a malformed frame */ } };
+  src.onerror = () => {
+    if (live.source !== src) return;
+    setLiveBadge('off', 'Reconnecting…');
+    if (src.readyState === EventSource.CLOSED) live.retry = setTimeout(() => connectLive(symbol), 5000);
+  };
+}
+
+function onLive(p) {
+  if (p.symbol !== state.symbol || !state.series || !p.bars?.standard?.length) return;
+  const mode = p.live?.mode;
+  setLiveBadge(mode === 'live' ? 'on' : 'sim', `${mode === 'live' ? 'LIVE' : 'SIMULATED'} ${p.live?.updated || ''}`.trim());
+  const stock = state.index.stocks.find((s) => s.symbol === p.symbol);
+  const lastMin = p.minutes.at(-1);
+  if (stock && lastMin && p.live) {
+    const prev = stock.sessions.filter((d) => d.date < p.date).at(-1);
+    stock.last = lastMin[4];
+    if (prev?.close) stock.change = (100 * (lastMin[4] - prev.close)) / prev.close;
+  }
+  const range = volChart.timeScale().getVisibleLogicalRange();
+  const atEdge = !range || range.to >= state.upto - 2;        // following the latest candle
+  const keep = atEdge ? null : visibleTimeRange();
+  state.series.upsertLive(p);
+  renderScanner();
+  if (state.replay) return;                                  // replay keeps its own frozen view
+  rebuild(keep);
+  fillSessions();
+  if (atEdge && range) {                                     // same zoom, newest candle at the right
+    const to = state.upto - 1 + 4;
+    setMainRange(to - (range.to - range.from), to);
+  }
+}
+
 function overlay(kind, message) {
   const el = $('state-overlay');
   if (!kind) { el.classList.add('hidden'); return; }
@@ -342,6 +403,7 @@ async function init() {
     $('status-data').textContent = 'Data unavailable';
     return;
   }
+  live.url = await liveConfig();
   renderProof();
   renderTopSessions();
   const [hs, hd] = decodeURIComponent(location.hash.slice(1)).split('/');
@@ -635,7 +697,7 @@ function exitReplay(redraw = true) {
   state.replay = null;
   $('replay-btn').classList.remove('on');
   $('replay-bar').hidden = true;
-  if (redraw && state.symbol) { state.upto = bars().length; draw(); goToSession(date, false); }
+  if (redraw && state.symbol) { rebuild(); fillSessions(); goToSession(date, false); }   // picks up live updates made during replay
 }
 
 function pinReplayWindow() {

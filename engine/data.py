@@ -11,7 +11,13 @@ from . import quality
 
 def load_minutes(csv_path: str | Path) -> pd.DataFrame:
     """Return clean session minutes with epoch seconds, date and a bulk-volume buy fraction."""
-    df = pd.read_csv(csv_path)
+    return prepare(pd.read_csv(csv_path), Path(csv_path).stem.upper())
+
+
+def prepare(df: pd.DataFrame, symbol: str = "") -> pd.DataFrame:
+    """Same as load_minutes, for 1-minute candles already in memory (timestamp, open, high,
+    low, close, volume). Used by the live server."""
+    df = df.copy()
     ts = pd.to_datetime(df["timestamp"])
     if ts.dt.tz is None:
         ts = ts.dt.tz_localize("Asia/Kolkata")
@@ -25,7 +31,7 @@ def load_minutes(csv_path: str | Path) -> pd.DataFrame:
     df = df.dropna(subset=["open", "high", "low", "close", "volume"])
     df["date"] = df["ts"].dt.strftime("%Y-%m-%d")
     df["hm"] = df["ts"].dt.strftime("%H:%M")
-    df, issues = quality.clean(df, Path(csv_path).stem.upper())
+    df, issues = quality.clean(df, symbol)
 
     # Bulk volume classification (Easley, Lopez de Prado & O'Hara): the share of a minute's
     # volume that was buyer-initiated = Phi(price change / sigma), sigma from past minutes only.

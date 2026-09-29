@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%23565b66'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%23565b66'/%3E%3C/svg%3E">
 <link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=35">
+<link rel="stylesheet" href="css/app.css?v=37">
 </head>
 <body>
 <header class="toolbar">
@@ -25,6 +25,7 @@
     <button data-range="1" title="Latest session">1D</button><button data-range="5" title="Last 5 sessions">5D</button><button data-range="21" title="Last month">1M</button><button data-range="all" title="All history">All</button>
   </div>
   <select id="session-select" aria-label="Go to session" title="Go to session (urgency %, ● = alerts)"></select>
+  <span id="live-badge" class="live-badge" hidden role="status" aria-live="polite"><i></i><span>Live</span></span>
   <button id="replay-btn" class="btn replay-btn" title="Replay the session in view (R)"><svg viewBox="0 0 16 16"><path d="M4 3v10l9-5z" class="fill"/></svg><span>Replay</span></button>
   <span class="chip" title="Every volume candle holds this many shares, set from the stock's previous 20 sessions">1 candle = <b id="size-chip" class="num">–</b> sh</span>
   <div class="spacer"></div>
@@ -161,6 +162,6 @@
 </dialog>
 
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
-<script type="module" src="js/main.js?v=35"></script>
+<script type="module" src="js/main.js?v=37"></script>
 </body>
 </html>
