@@ -266,6 +266,31 @@ for (const [w, h] of [[1920, 1080], [1366, 768], [1024, 768]]) {
   });
 }
 
+test('phone (390x844, opened from the QR code): chart first, no sideways scroll, everything reachable', async ({ page }, info) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await open(page);
+  const r = await page.evaluate(() => {
+    const box = (id) => document.getElementById(id).getBoundingClientRect();
+    return {
+      overflow: document.documentElement.scrollWidth - window.innerWidth,
+      chartTop: box('vol-wrap').top, chartH: box('vol-wrap').height, chartW: box('vol-wrap').width,
+      toolbarBottom: document.querySelector('.toolbar').getBoundingClientRect().bottom,
+      railHidden: getComputedStyle(document.querySelector('.rail')).display === 'none',
+      scanner: document.querySelectorAll('#scanner tr').length,
+    };
+  });
+  expect(r.overflow).toBeLessThanOrEqual(0);
+  expect(r.railHidden).toBe(true);
+  expect(r.chartTop).toBeLessThan(200);                   // the chart is on the first screen
+  expect(r.chartH).toBeGreaterThan(300);
+  expect(r.chartW).toBeGreaterThanOrEqual(388);
+  expect(r.scanner).toBeGreaterThan(5);
+  await expect(page.locator('#scanner')).toBeAttached();
+  await page.locator('#results').scrollIntoViewIfNeeded();
+  await expect(page.locator('#results')).toBeInViewport();
+  await page.screenshot({ path: `test-results/screens/${info.project.name}-phone.png`, fullPage: true });
+});
+
 test('smoothness: zooming and panning do not slow the frame rate', async ({ page }) => {
   await open(page);
   const measure = (n) => page.evaluate((count) => new Promise((done) => {

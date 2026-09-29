@@ -340,3 +340,32 @@ dialog form .btn { border-color: var(--line); color: var(--text); }
 .live-badge.off { color: var(--text-3); }
 @keyframes live-pulse { 70% { box-shadow: 0 0 0 6px rgba(31,163,122,0); } 100% { box-shadow: 0 0 0 0 rgba(31,163,122,0); } }
 @media (prefers-reduced-motion: reduce) { .live-badge.on i { animation: none; } }
+
+/* ---------- phones (judges open this from a QR code) ---------- */
+@media (max-width: 640px) {
+  html, body { overflow-x: hidden; }
+  body { grid-template-rows: auto auto auto; }
+  .toolbar { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 12px; }
+  .toolbar .brand { order: 0; padding-right: 0; }
+  .toolbar .symbol-picker { order: 1; flex: 1 1 140px; min-width: 0; }
+  .toolbar .symbol-picker input { width: 100%; }
+  .toolbar .live-badge { order: 2; }
+  .toolbar #density { order: 3; }
+  .toolbar #session-select { order: 4; flex: 1 1 110px; min-width: 0; max-width: none; }
+  .toolbar .replay-btn { order: 5; }
+  .toolbar #layers { order: 6; }
+  .toolbar #theme-btn { order: 7; }
+  .toolbar #help-btn { order: 8; }
+  .toolbar .spacer, #ranges, .chip { display: none; }
+  .rail { display: none; }                       /* drawing tools are a desktop feature */
+  .stage { height: 86svh; }
+  .pane-compare { flex-basis: 30%; min-height: 120px; }
+  .resizer { flex-basis: 8px; }
+  .compare-head { gap: 8px; padding: 0 6px 0 10px; }
+  .compare-head .segmented button { min-width: 30px; padding: 0 5px; }
+  .legend { font-size: 11px; max-width: calc(100% - 90px); }
+  .go-latest { right: 84px; }
+  .statusbar { flex-wrap: wrap; white-space: normal; gap: 2px 8px; padding: 8px 12px; line-height: 1.4; }
+  .statusbar #status-data, .statusbar .spacer { display: none; }
+  .replay-bar { flex-wrap: wrap; row-gap: 6px; }
+}

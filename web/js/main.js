@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level } from './util.js?v=37';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=37';
-import { loadIndex, Series } from './data.js?v=37';
-import { createTools } from './tools.js?v=37';
-import { SessionSeparators, CompareBands } from './overlays.js?v=37';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level } from './util.js?v=39';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=39';
+import { loadIndex, Series } from './data.js?v=39';
+import { createTools } from './tools.js?v=39';
+import { SessionSeparators, CompareBands } from './overlays.js?v=39';
 
 const LWC = window.LightweightCharts;
 
@@ -68,6 +68,7 @@ function chartOptions() {
     timeScale: { borderColor: t.line, timeVisible: true, secondsVisible: false, rightOffset: 8, minBarSpacing: 0.05, barSpacing: 7 },
     crosshair: { mode: state.magnet ? LWC.CrosshairMode.Magnet : LWC.CrosshairMode.Normal, vertLine: line, horzLine: line },
     kineticScroll: { mouse: true, touch: true },
+    handleScroll: { vertTouchDrag: false },    // on phones a vertical swipe scrolls the page, not the chart
   };
 }
 const candleOptions = () => ({ upColor: th().up, downColor: th().down, wickUpColor: th().up, wickDownColor: th().down,
