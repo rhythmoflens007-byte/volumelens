@@ -10,13 +10,22 @@ index, and explained alerts from a LightGBM model.
 
 ## What the site shows
 
-| Panel | What it is |
+| Feature | What it is |
 |---|---|
-| Time chart | Normal 5-minute candles. Orange shading marks the minutes inside fast-inflow zones; hovering a volume candle highlights the exact minutes it covered. |
-| Volume candles | One candle = a fixed number of shares, sized per stock from its previous 20 days (average daily volume ÷ 75). Orange = the last 3 candles filled in under 40% of their normal time. |
+| **Urgency** | A volume candle is *urgent* when the last 3 candles filled in under 40% of their normal time. Urgent candles are orange; the matching minutes are shaded on the 5-minute chart. |
+| Time chart | Normal 5-minute candles. Hover a volume candle to highlight exactly which minutes it covered. |
+| Volume candles | One candle = a fixed number of shares, sized per stock from its previous 20 days (average daily volume ÷ 75). |
 | Fill time + VPIN | Minutes each candle took to fill, a smoothed line, the normal fill time (dashed) and VPIN (blue, 0–1). |
-| Absorption | `1 − actual move ÷ expected move`. Near 1: heavy volume, price held. |
-| Alerts | Top 5% of model scores (at least 15 min apart, max 6 per stock per day) with TreeSHAP reasons. |
+| Absorption | `1 − actual move ÷ expected move`, shown for context. |
+| **Today's urgency** | Share of the day's shares traded in urgent candles, and the biggest burst ("55 urgent candles in 12 min; a 5-minute chart shows it as 4 candles"). |
+| **Scanner** | Stocks ranked by urgency, plus the most urgent sessions in the data. |
+| **Replay** | Plays a session at market pace (urgent bursts arrive fast). Every chart shows only what was known at that moment: completed 5-minute candles, bars and alerts so far. Keys: R, Space, ← →, Esc. |
+| Urgency alerts | Top 5% of model scores (at least 15 min apart, max 6 per stock per day) with TreeSHAP reasons. |
+
+**No repainting.** Every indicator only looks backwards, so replay shows exactly what a live chart
+would have shown. `tests/test_engine.py` checks this directly: indicators computed on the first *k*
+bars equal the first *k* bars of the full computation, and bars built from minute data cut mid-day
+equal the bars completed by then.
 
 ## Method
 
@@ -62,7 +71,7 @@ disclosed institutional trades.
 python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt     # Windows; use .venv/bin on macOS/Linux
 .venv/Scripts/python run.py                       # rebuilds web/data and results.json
-.venv/Scripts/python -m pytest -q                 # 9 tests
+.venv/Scripts/python -m pytest -q                 # 11 tests
 python -m http.server 8765 --directory web        # open http://localhost:8765
 ```
 

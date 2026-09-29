@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VolumeLens</title>
-<meta name="description" content="Volume-normalized charts for NSE stocks: time candles, adaptive volume candles, fill-time and VPIN, absorption and explained alerts.">
+<title>VolumeLens · see urgency before it hits you</title>
+<meta name="description" content="An urgency chart for NSE stocks: candles built from shares traded, not minutes, so bursts of urgent volume that a 5-minute chart hides become visible. Open source, backtested, replayable.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' fill='%23089981'/%3E%3Crect x='6.5' y='2' width='3' height='12' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' fill='%23F23645'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/app.css?v=11">
+<link rel="stylesheet" href="css/app.css?v=14">
 </head>
 <body>
 <header class="toolbar">
-  <div class="brand">VolumeLens</div>
+  <div class="brand">VolumeLens <span class="tag">urgency chart</span></div>
   <div class="sep"></div>
   <div class="symbol-picker">
     <input id="symbol-input" type="text" autocomplete="off" spellcheck="false" aria-label="Symbol">
@@ -21,10 +21,10 @@
   <select id="date-select" aria-label="Trading day"></select>
   <button id="next-day" class="icon-btn" title="Next day" aria-label="Next day">&#8250;</button>
   <div class="sep"></div>
-  <span class="tb-label">Time chart <b>5m</b></span>
+  <button id="replay-btn" class="text-btn replay-btn" title="Replay the session bar by bar (R)"><span class="play-glyph">&#9654;</span> Replay</button>
   <span class="tb-label">Volume bar <b id="bar-size">–</b></span>
   <div class="spacer"></div>
-  <label class="toggle" title="Shade fast-inflow zones on the time chart"><input id="zones-toggle" type="checkbox" checked> Zones on time chart</label>
+  <label class="toggle" title="Shade urgent minutes on the 5-minute chart"><input id="zones-toggle" type="checkbox" checked> Urgency on time chart</label>
   <button id="theme-btn" class="text-btn" title="Switch theme">Light</button>
   <button id="help-btn" class="text-btn" title="How to read the charts">Help</button>
 </header>
@@ -42,21 +42,45 @@
       <div class="legend" id="legend-fill"></div>
       <div class="legend" id="legend-aai"></div>
     </div>
+    <div class="replay-bar" id="replay-bar" hidden>
+      <span class="replay-tag">REPLAY</span>
+      <button id="rp-back" class="icon-btn" title="Step back (←)" aria-label="Step back">&#9198;</button>
+      <button id="rp-play" class="icon-btn play" title="Play / pause (Space)" aria-label="Play">&#9654;</button>
+      <button id="rp-fwd" class="icon-btn" title="Step forward (→)" aria-label="Step forward">&#9197;</button>
+      <select id="rp-speed" title="Replay speed: market minutes per real second" aria-label="Replay speed">
+        <option value="1">1 min/s</option>
+        <option value="3" selected>3 min/s</option>
+        <option value="10">10 min/s</option>
+        <option value="30">30 min/s</option>
+      </select>
+      <input id="rp-scrub" type="range" min="0" max="0" value="0" aria-label="Replay position">
+      <span id="rp-clock" class="rp-clock">–</span>
+      <button id="rp-exit" class="text-btn" title="Leave replay (Esc)">Exit</button>
+    </div>
   </section>
 
   <aside class="sidebar">
-    <div class="panel">
-      <div class="panel-head">Watchlist</div>
-      <table class="watchlist"><thead><tr><th>Symbol</th><th>Last</th><th>Chg%</th></tr></thead><tbody id="watchlist"></tbody></table>
+    <div class="panel day-card">
+      <div class="panel-head">Today's urgency <span class="muted" id="day-label"></span></div>
+      <div class="score-row"><span id="day-score" class="score">–</span><span class="score-note">of the day's shares traded in urgent bars</span></div>
+      <p id="day-burst" class="burst"></p>
     </div>
-    <div class="panel grow">
-      <div class="panel-head">Alerts <span id="alert-count" class="muted"></span></div>
+    <div class="panel">
+      <div class="panel-head">Scanner <span class="muted">latest session</span></div>
+      <table class="scanner"><thead><tr><th>Symbol</th><th>Urgency</th><th>Burst</th><th>Chg%</th></tr></thead><tbody id="scanner"></tbody></table>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Most urgent sessions</div>
+      <ul id="top-sessions" class="sessions"></ul>
+    </div>
+    <div class="panel">
+      <div class="panel-head">Urgency alerts <span id="alert-count" class="muted"></span></div>
       <ul id="alerts" class="alerts"></ul>
     </div>
     <div class="panel">
-      <div class="panel-head">Validation <span class="muted">walk-forward, unseen days</span></div>
+      <div class="panel-head">Tested <span class="muted">out-of-sample</span></div>
+      <p class="proof" id="proof"></p>
       <table class="results" id="results"></table>
-      <p class="note" id="results-note"></p>
     </div>
   </aside>
 </main>
@@ -64,29 +88,33 @@
 <footer class="statusbar">
   <span id="status-data">Loading…</span>
   <span class="spacer"></span>
-  <span>Educational tool, not investment advice</span>
+  <span>Educational tool, not investment advice · <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener">Charts by TradingView</a></span>
 </footer>
 
 <dialog id="help">
   <h2>How to read VolumeLens</h2>
   <dl>
+    <dt>The idea</dt>
+    <dd>A 5-minute chart gives every 5 minutes the same space, whether 10 people traded or 10,000. VolumeLens draws a new candle every time a fixed number of shares trade, so a burst of urgent volume becomes many candles instead of one.</dd>
+    <dt>Urgent (orange)</dt>
+    <dd>The last 3 volume candles filled in under 40% of their normal time. In testing, a big move (30-minute range over 2× normal) followed urgent bars about 2.3× as often as other bars. Urgency says <em>something is happening</em>, not which way the price will go.</dd>
     <dt>Time chart</dt>
-    <dd>Normal 5-minute candles. Orange shading marks urgent minutes, where volume flowed in unusually fast.</dd>
-    <dt>Volume candles</dt>
-    <dd>Each candle is a fixed number of shares, not a fixed number of minutes. The size adapts per stock from its previous 20 days. <span class="swatch fast"></span>Orange candles filled fast: the last 3 bars took under 40% of their normal time.</dd>
+    <dd>Normal 5-minute candles. Orange shading marks urgent minutes. Hover a volume candle to see exactly which minutes it covered.</dd>
     <dt>Fill time + VPIN</dt>
-    <dd>Bars show how many minutes each volume candle took to fill; a short bar means volume arrived fast. The white line is the smoothed fill time, the dashed line is the normal fill time for that moment. The blue line is VPIN (0–1): how one-sided buying versus selling was over the last 50 candles.</dd>
+    <dd>Bars show how long each volume candle took to fill (short = urgent). White: smoothed fill time. Dashed: normal fill time for that moment. Blue: VPIN (0–1), how one-sided buying versus selling was over the last 50 candles.</dd>
     <dt>Absorption</dt>
-    <dd>1 − actual price move ÷ expected move. Near 1: heavy trading but the price barely moved (the price held). Below 0: the price moved more than usual. Shown for context; it does not feed the alert model.</dd>
-    <dt>Alerts</dt>
-    <dd>A LightGBM model scores every candle for the chance of a big move (a 30-minute range over 2× normal). The top 5% of scores become alerts (at least 15 minutes apart, at most 6 per stock per day), each listing the signals that drove it (TreeSHAP). Scores come from models that never saw that day. Alerts flag urgency and a higher chance of a large move in either direction; they do not say which way the price will go or who is trading.</dd>
-    <dt>Controls</dt>
-    <dd>Scroll to zoom, drag to pan, double-click a scale to reset. ← → step through volume candles. Esc fits the whole day.</dd>
+    <dd>1 − actual price move ÷ expected move. Near 1: heavy volume but the price held. Shown for context only.</dd>
+    <dt>Replay</dt>
+    <dd>Plays the session candle by candle at market pace, so urgent bursts arrive fast. Every value you see was computable at that moment: nothing is redrawn later (checked by automated tests).</dd>
+    <dt>Scanner</dt>
+    <dd>Urgency score = share of the day's volume that traded in urgent bars. Burst = the largest run of urgent bars.</dd>
+    <dt>Keys</dt>
+    <dd>R replay · Space play/pause · ← → step · Esc exit replay / fit day.</dd>
   </dl>
   <form method="dialog"><button class="text-btn">Close</button></form>
 </dialog>
 
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/app.js?v=14"></script>
 </body>
 </html>

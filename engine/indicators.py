@@ -54,12 +54,12 @@ def _speed_classes(b: pd.DataFrame) -> None:
     watch = (~fast & (b["pace"] < C.WATCH_RATIO)).fillna(False)
     b["speed"] = np.where(fast, "fast", np.where(watch, "watch", "normal"))
 
-    # consecutive fast bars (resets every day) and fast-inflow zones of >= 2 bars
-    run_id = (fast != fast.shift()).cumsum() + b["date"].factorize()[0] * 100000
-    streak = fast.groupby(run_id).cumsum().where(fast, 0)
-    run_len = fast.groupby(run_id).transform("sum").where(fast, 0)
+    # Consecutive urgent bars so far (resets every day). A zone starts once the streak reaches
+    # 2 bars; it only looks backwards, so the chart never re-colours a bar after the fact.
+    new_run = (fast != fast.shift()) | (b["date"] != b["date"].shift())
+    streak = fast.groupby(new_run.cumsum()).cumsum().where(fast, 0)
     b["streak"] = streak.astype(int)
-    b["zone"] = (run_len >= C.ZONE_MIN_BARS)
+    b["zone"] = b["streak"] >= C.ZONE_MIN_BARS
 
 
 def _vpin(b: pd.DataFrame) -> None:

@@ -91,5 +91,29 @@
   "open_hour",
   "log_pace",
   "vpin"
- ]
+ ],
+ "urgency": {
+  "all_day": {
+   "urgent": 0.1994,
+   "other": 0.0856,
+   "lift": 2.3307,
+   "urgent_bars": 677,
+   "bars": 4721
+  },
+  "after_10_30": {
+   "urgent": 0.1921,
+   "other": 0.0544,
+   "lift": 3.5306,
+   "urgent_bars": 531,
+   "bars": 3674
+  },
+  "lift_range": [
+   2.2273,
+   2.4487
+  ],
+  "thresholds": [
+   0.3,
+   0.5
+  ]
+ }
 }

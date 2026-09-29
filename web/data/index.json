@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-29 15:14",
+ "generated": "2026-09-29 15:43",
  "stocks": [
   {
    "symbol": "NARMADA",
@@ -9,70 +9,154 @@
      "alerts": 0,
      "bars": 27,
      "close": 37.08,
-     "open": 37.44
+     "open": 37.44,
+     "urgency_score": 3.7,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 94000,
+      "minutes": 4,
+      "from": "14:31",
+      "to": "14:36",
+      "time_candles": 1,
+      "start_price": 37.62
+     }
     },
     {
      "date": "2026-06-15",
      "alerts": 0,
      "bars": 18,
      "close": 37.08,
-     "open": 37.3
+     "open": 37.3,
+     "urgency_score": 11.1,
+     "zones": 0,
+     "urgent_bars": 2,
+     "burst": {
+      "bars": 1,
+      "shares": 74000,
+      "minutes": 1,
+      "from": "10:37",
+      "to": "10:37",
+      "time_candles": 1,
+      "start_price": 37.7
+     }
     },
     {
      "date": "2026-06-16",
      "alerts": 0,
      "bars": 8,
      "close": 37.05,
-     "open": 37.06
+     "open": 37.06,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-17",
      "alerts": 0,
      "bars": 7,
      "close": 36.13,
-     "open": 37.12
+     "open": 37.12,
+     "urgency_score": 14.3,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 74000,
+      "minutes": 3,
+      "from": "14:41",
+      "to": "14:44",
+      "time_candles": 1,
+      "start_price": 37.05
+     }
     },
     {
      "date": "2026-06-18",
      "alerts": 0,
      "bars": 2,
      "close": 35.35,
-     "open": 36.39
+     "open": 36.39,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-19",
      "alerts": 0,
      "bars": 6,
      "close": 35.57,
-     "open": 35.4
+     "open": 35.4,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-22",
      "alerts": 0,
      "bars": 9,
      "close": 37.42,
-     "open": 35.81
+     "open": 35.81,
+     "urgency_score": 11.1,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 74000,
+      "minutes": 18,
+      "from": "15:09",
+      "to": "15:28",
+      "time_candles": 4,
+      "start_price": 37.59
+     }
     },
     {
      "date": "2026-06-23",
      "alerts": 0,
      "bars": 8,
      "close": 36.99,
-     "open": 37.87
+     "open": 37.87,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-24",
      "alerts": 0,
      "bars": 77,
      "close": 39.79,
-     "open": 37.7
+     "open": 37.7,
+     "urgency_score": 63.6,
+     "zones": 3,
+     "urgent_bars": 49,
+     "burst": {
+      "bars": 41,
+      "shares": 2378000,
+      "minutes": 77,
+      "from": "11:33",
+      "to": "12:49",
+      "time_candles": 16,
+      "start_price": 38.57
+     }
     },
     {
      "date": "2026-06-25",
      "alerts": 0,
      "bars": 85,
      "close": 42.73,
-     "open": 41.36
+     "open": 41.36,
+     "urgency_score": 41.2,
+     "zones": 4,
+     "urgent_bars": 35,
+     "burst": {
+      "bars": 16,
+      "shares": 928000,
+      "minutes": 11,
+      "from": "09:37",
+      "to": "09:48",
+      "time_candles": 3,
+      "start_price": 41.43
+     }
     }
    ],
    "last": 42.73,
@@ -86,42 +170,96 @@
      "alerts": 0,
      "bars": 129,
      "close": 108.91,
-     "open": 107.72
+     "open": 107.72,
+     "urgency_score": 14.0,
+     "zones": 5,
+     "urgent_bars": 18,
+     "burst": {
+      "bars": 5,
+      "shares": 800000,
+      "minutes": 3,
+      "from": "13:06",
+      "to": "13:09",
+      "time_candles": 1,
+      "start_price": 109.01
+     }
     },
     {
      "date": "2026-06-18",
      "alerts": 0,
      "bars": 76,
      "close": 109.52,
-     "open": 109.18
+     "open": 109.18,
+     "urgency_score": 15.8,
+     "zones": 2,
+     "urgent_bars": 12,
+     "burst": {
+      "bars": 9,
+      "shares": 1800000,
+      "minutes": 5,
+      "from": "12:41",
+      "to": "12:46",
+      "time_candles": 2,
+      "start_price": 109.81
+     }
     },
     {
      "date": "2026-06-19",
      "alerts": 0,
      "bars": 62,
      "close": 108.74,
-     "open": 109.14
+     "open": 109.14,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-22",
      "alerts": 0,
      "bars": 65,
      "close": 109.7,
-     "open": 109.1
+     "open": 109.1,
+     "urgency_score": 35.4,
+     "zones": 1,
+     "urgent_bars": 23,
+     "burst": {
+      "bars": 22,
+      "shares": 4180000,
+      "minutes": 25,
+      "from": "15:02",
+      "to": "15:27",
+      "time_candles": 5,
+      "start_price": 109.77
+     }
     },
     {
      "date": "2026-06-23",
      "alerts": 0,
      "bars": 78,
      "close": 107.44,
-     "open": 109.18
+     "open": 109.18,
+     "urgency_score": 2.6,
+     "zones": 1,
+     "urgent_bars": 2,
+     "burst": {
+      "bars": 2,
+      "shares": 380000,
+      "minutes": 1,
+      "from": "13:15",
+      "to": "13:16",
+      "time_candles": 1,
+      "start_price": 107.59
+     }
     },
     {
      "date": "2026-06-24",
      "alerts": 0,
      "bars": 13,
      "close": 106.96,
-     "open": 107.51
+     "open": 107.51,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     }
    ],
    "last": 106.96,
@@ -135,168 +273,411 @@
      "alerts": 1,
      "bars": 93,
      "close": 1338.6,
-     "open": 1350.5
+     "open": 1350.5,
+     "urgency_score": 12.9,
+     "zones": 3,
+     "urgent_bars": 12,
+     "burst": {
+      "bars": 6,
+      "shares": 1140000,
+      "minutes": 8,
+      "from": "12:44",
+      "to": "12:52",
+      "time_candles": 2,
+      "start_price": 1336.34
+     }
     },
     {
      "date": "2026-05-18",
      "alerts": 0,
      "bars": 58,
      "close": 1334.61,
-     "open": 1324.3
+     "open": 1324.3,
+     "urgency_score": 20.7,
+     "zones": 4,
+     "urgent_bars": 12,
+     "burst": {
+      "bars": 4,
+      "shares": 840000,
+      "minutes": 1,
+      "from": "13:06",
+      "to": "13:07",
+      "time_candles": 1,
+      "start_price": 1336.23
+     }
     },
     {
      "date": "2026-05-19",
      "alerts": 0,
      "bars": 102,
      "close": 1322.96,
-     "open": 1341.2
+     "open": 1341.2,
+     "urgency_score": 20.6,
+     "zones": 4,
+     "urgent_bars": 21,
+     "burst": {
+      "bars": 9,
+      "shares": 1800000,
+      "minutes": 6,
+      "from": "15:03",
+      "to": "15:09",
+      "time_candles": 2,
+      "start_price": 1323.88
+     }
     },
     {
      "date": "2026-05-20",
      "alerts": 0,
      "bars": 58,
      "close": 1360.41,
-     "open": 1323.6
+     "open": 1323.6,
+     "urgency_score": 5.2,
+     "zones": 1,
+     "urgent_bars": 3,
+     "burst": {
+      "bars": 3,
+      "shares": 630000,
+      "minutes": 4,
+      "from": "11:37",
+      "to": "11:41",
+      "time_candles": 1,
+      "start_price": 1340.4
+     }
     },
     {
      "date": "2026-05-21",
      "alerts": 0,
      "bars": 81,
      "close": 1347.33,
-     "open": 1359.7
+     "open": 1359.7,
+     "urgency_score": 13.6,
+     "zones": 2,
+     "urgent_bars": 11,
+     "burst": {
+      "bars": 9,
+      "shares": 1800000,
+      "minutes": 7,
+      "from": "15:04",
+      "to": "15:11",
+      "time_candles": 2,
+      "start_price": 1351.5
+     }
     },
     {
      "date": "2026-05-22",
      "alerts": 0,
      "bars": 29,
      "close": 1355.98,
-     "open": 1356.8
+     "open": 1356.8,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-05-25",
      "alerts": 0,
      "bars": 31,
      "close": 1365.91,
-     "open": 1360.7
+     "open": 1360.7,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-05-26",
      "alerts": 0,
      "bars": 72,
      "close": 1356.65,
-     "open": 1361.8
+     "open": 1361.8,
+     "urgency_score": 29.2,
+     "zones": 3,
+     "urgent_bars": 21,
+     "burst": {
+      "bars": 15,
+      "shares": 2700000,
+      "minutes": 9,
+      "from": "15:03",
+      "to": "15:12",
+      "time_candles": 2,
+      "start_price": 1354.93
+     }
     },
     {
      "date": "2026-05-27",
      "alerts": 0,
      "bars": 68,
      "close": 1351.47,
-     "open": 1356.3
+     "open": 1356.3,
+     "urgency_score": 5.9,
+     "zones": 1,
+     "urgent_bars": 4,
+     "burst": {
+      "bars": 3,
+      "shares": 540000,
+      "minutes": 3,
+      "from": "14:26",
+      "to": "14:29",
+      "time_candles": 1,
+      "start_price": 1354.56
+     }
     },
     {
      "date": "2026-05-29",
      "alerts": 2,
      "bars": 221,
      "close": 1320.6,
-     "open": 1351.0
+     "open": 1351.0,
+     "urgency_score": 68.3,
+     "zones": 5,
+     "urgent_bars": 151,
+     "burst": {
+      "bars": 125,
+      "shares": 22500000,
+      "minutes": 29,
+      "from": "15:00",
+      "to": "15:29",
+      "time_candles": 6,
+      "start_price": 1326.23
+     }
     },
     {
      "date": "2026-06-01",
      "alerts": 0,
      "bars": 43,
      "close": 1320.07,
-     "open": 1324.9
+     "open": 1324.9,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-02",
      "alerts": 0,
      "bars": 109,
      "close": 1319.09,
-     "open": 1318.7
+     "open": 1318.7,
+     "urgency_score": 19.3,
+     "zones": 4,
+     "urgent_bars": 21,
+     "burst": {
+      "bars": 8,
+      "shares": 1600000,
+      "minutes": 7,
+      "from": "14:24",
+      "to": "14:31",
+      "time_candles": 2,
+      "start_price": 1321.94
+     }
     },
     {
      "date": "2026-06-03",
      "alerts": 0,
      "bars": 86,
      "close": 1313.05,
-     "open": 1307.8
+     "open": 1307.8,
+     "urgency_score": 8.1,
+     "zones": 3,
+     "urgent_bars": 7,
+     "burst": {
+      "bars": 3,
+      "shares": 630000,
+      "minutes": 3,
+      "from": "14:52",
+      "to": "14:55",
+      "time_candles": 1,
+      "start_price": 1316.14
+     }
     },
     {
      "date": "2026-06-04",
      "alerts": 0,
      "bars": 99,
      "close": 1306.29,
-     "open": 1306.4
+     "open": 1306.4,
+     "urgency_score": 17.2,
+     "zones": 3,
+     "urgent_bars": 17,
+     "burst": {
+      "bars": 9,
+      "shares": 1890000,
+      "minutes": 4,
+      "from": "15:01",
+      "to": "15:05",
+      "time_candles": 1,
+      "start_price": 1300.89
+     }
     },
     {
      "date": "2026-06-05",
      "alerts": 0,
      "bars": 79,
      "close": 1291.57,
-     "open": 1299.5
+     "open": 1299.5,
+     "urgency_score": 8.9,
+     "zones": 2,
+     "urgent_bars": 7,
+     "burst": {
+      "bars": 4,
+      "shares": 840000,
+      "minutes": 2,
+      "from": "12:41",
+      "to": "12:42",
+      "time_candles": 1,
+      "start_price": 1297.76
+     }
     },
     {
      "date": "2026-06-08",
      "alerts": 0,
      "bars": 71,
      "close": 1261.84,
-     "open": 1275.0
+     "open": 1275.0,
+     "urgency_score": 11.3,
+     "zones": 3,
+     "urgent_bars": 8,
+     "burst": {
+      "bars": 4,
+      "shares": 840000,
+      "minutes": 4,
+      "from": "15:16",
+      "to": "15:19",
+      "time_candles": 1,
+      "start_price": 1264.16
+     }
     },
     {
      "date": "2026-06-09",
      "alerts": 0,
      "bars": 108,
      "close": 1272.53,
-     "open": 1269.8
+     "open": 1269.8,
+     "urgency_score": 19.4,
+     "zones": 5,
+     "urgent_bars": 21,
+     "burst": {
+      "bars": 7,
+      "shares": 1470000,
+      "minutes": 3,
+      "from": "15:06",
+      "to": "15:09",
+      "time_candles": 1,
+      "start_price": 1270.24
+     }
     },
     {
      "date": "2026-06-10",
      "alerts": 0,
      "bars": 87,
      "close": 1258.67,
-     "open": 1292.8
+     "open": 1292.8,
+     "urgency_score": 14.9,
+     "zones": 2,
+     "urgent_bars": 13,
+     "burst": {
+      "bars": 9,
+      "shares": 1980000,
+      "minutes": 5,
+      "from": "13:07",
+      "to": "13:12",
+      "time_candles": 2,
+      "start_price": 1273.06
+     }
     },
     {
      "date": "2026-06-11",
      "alerts": 0,
      "bars": 55,
      "close": 1263.26,
-     "open": 1261.4
+     "open": 1261.4,
+     "urgency_score": 14.5,
+     "zones": 2,
+     "urgent_bars": 8,
+     "burst": {
+      "bars": 5,
+      "shares": 1100000,
+      "minutes": 6,
+      "from": "15:04",
+      "to": "15:10",
+      "time_candles": 2,
+      "start_price": 1264.93
+     }
     },
     {
      "date": "2026-06-12",
      "alerts": 0,
      "bars": 50,
      "close": 1296.0,
-     "open": 1272.3
+     "open": 1272.3,
+     "urgency_score": 6.0,
+     "zones": 1,
+     "urgent_bars": 3,
+     "burst": {
+      "bars": 3,
+      "shares": 660000,
+      "minutes": 4,
+      "from": "12:04",
+      "to": "12:07",
+      "time_candles": 1,
+      "start_price": 1269.95
+     }
     },
     {
      "date": "2026-06-15",
      "alerts": 0,
      "bars": 58,
      "close": 1307.64,
-     "open": 1312.4
+     "open": 1312.4,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-16",
      "alerts": 0,
      "bars": 83,
      "close": 1327.08,
-     "open": 1311.7
+     "open": 1311.7,
+     "urgency_score": 9.6,
+     "zones": 1,
+     "urgent_bars": 8,
+     "burst": {
+      "bars": 6,
+      "shares": 1260000,
+      "minutes": 4,
+      "from": "15:03",
+      "to": "15:07",
+      "time_candles": 1,
+      "start_price": 1331.16
+     }
     },
     {
      "date": "2026-06-17",
      "alerts": 0,
      "bars": 38,
      "close": 1332.57,
-     "open": 1330.4
+     "open": 1330.4,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-18",
      "alerts": 0,
      "bars": 69,
      "close": 1331.9,
-     "open": 1326.8
+     "open": 1326.8,
+     "urgency_score": 14.5,
+     "zones": 2,
+     "urgent_bars": 10,
+     "burst": {
+      "bars": 6,
+      "shares": 1260000,
+      "minutes": 7,
+      "from": "15:01",
+      "to": "15:08",
+      "time_candles": 2,
+      "start_price": 1323.83
+     }
     }
    ],
    "last": 1331.9,
@@ -310,133 +691,334 @@
      "alerts": 0,
      "bars": 48,
      "close": 949.85,
-     "open": 956.0
+     "open": 956.0,
+     "urgency_score": 20.8,
+     "zones": 1,
+     "urgent_bars": 10,
+     "burst": {
+      "bars": 10,
+      "shares": 1500000,
+      "minutes": 24,
+      "from": "15:03",
+      "to": "15:27",
+      "time_candles": 5,
+      "start_price": 948.67
+     }
     },
     {
      "date": "2026-05-25",
      "alerts": 0,
      "bars": 73,
      "close": 971.91,
-     "open": 961.4
+     "open": 961.4,
+     "urgency_score": 19.2,
+     "zones": 3,
+     "urgent_bars": 14,
+     "burst": {
+      "bars": 8,
+      "shares": 1040000,
+      "minutes": 11,
+      "from": "09:30",
+      "to": "09:41",
+      "time_candles": 3,
+      "start_price": 961.4
+     }
     },
     {
      "date": "2026-05-26",
      "alerts": 0,
      "bars": 107,
      "close": 969.28,
-     "open": 975.7
+     "open": 975.7,
+     "urgency_score": 17.8,
+     "zones": 3,
+     "urgent_bars": 19,
+     "burst": {
+      "bars": 9,
+      "shares": 1170000,
+      "minutes": 7,
+      "from": "15:00",
+      "to": "15:08",
+      "time_candles": 2,
+      "start_price": 967.88
+     }
     },
     {
      "date": "2026-05-27",
      "alerts": 0,
      "bars": 52,
      "close": 967.61,
-     "open": 970.4
+     "open": 970.4,
+     "urgency_score": 1.9,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 140000,
+      "minutes": 1,
+      "from": "15:11",
+      "to": "15:12",
+      "time_candles": 1,
+      "start_price": 968.06
+     }
     },
     {
      "date": "2026-05-29",
      "alerts": 0,
      "bars": 160,
      "close": 964.59,
-     "open": 968.8
+     "open": 968.8,
+     "urgency_score": 50.6,
+     "zones": 7,
+     "urgent_bars": 81,
+     "burst": {
+      "bars": 27,
+      "shares": 3510000,
+      "minutes": 7,
+      "from": "15:00",
+      "to": "15:07",
+      "time_candles": 2,
+      "start_price": 965.17
+     }
     },
     {
      "date": "2026-06-01",
      "alerts": 0,
      "bars": 66,
      "close": 954.25,
-     "open": 965.25
+     "open": 965.25,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-02",
      "alerts": 0,
      "bars": 99,
      "close": 959.57,
-     "open": 949.15
+     "open": 949.15,
+     "urgency_score": 18.2,
+     "zones": 3,
+     "urgent_bars": 18,
+     "burst": {
+      "bars": 8,
+      "shares": 1200000,
+      "minutes": 11,
+      "from": "12:45",
+      "to": "12:56",
+      "time_candles": 3,
+      "start_price": 946.91
+     }
     },
     {
      "date": "2026-06-03",
      "alerts": 1,
      "bars": 167,
      "close": 971.87,
-     "open": 944.25
+     "open": 944.25,
+     "urgency_score": 46.1,
+     "zones": 3,
+     "urgent_bars": 77,
+     "burst": {
+      "bars": 55,
+      "shares": 8800000,
+      "minutes": 12,
+      "from": "12:29",
+      "to": "12:41",
+      "time_candles": 3,
+      "start_price": 942.54
+     }
     },
     {
      "date": "2026-06-04",
      "alerts": 0,
      "bars": 96,
      "close": 980.07,
-     "open": 970.3
+     "open": 970.3,
+     "urgency_score": 10.4,
+     "zones": 2,
+     "urgent_bars": 10,
+     "burst": {
+      "bars": 5,
+      "shares": 900000,
+      "minutes": 6,
+      "from": "13:13",
+      "to": "13:19",
+      "time_candles": 2,
+      "start_price": 974.37
+     }
     },
     {
      "date": "2026-06-05",
      "alerts": 0,
      "bars": 104,
      "close": 976.98,
-     "open": 986.45
+     "open": 986.45,
+     "urgency_score": 13.5,
+     "zones": 4,
+     "urgent_bars": 14,
+     "burst": {
+      "bars": 5,
+      "shares": 900000,
+      "minutes": 8,
+      "from": "13:26",
+      "to": "13:33",
+      "time_candles": 2,
+      "start_price": 974.75
+     }
     },
     {
      "date": "2026-06-08",
      "alerts": 0,
      "bars": 61,
      "close": 979.46,
-     "open": 981.9
+     "open": 981.9,
+     "urgency_score": 3.3,
+     "zones": 1,
+     "urgent_bars": 2,
+     "burst": {
+      "bars": 2,
+      "shares": 380000,
+      "minutes": 4,
+      "from": "14:48",
+      "to": "14:51",
+      "time_candles": 1,
+      "start_price": 984.62
+     }
     },
     {
      "date": "2026-06-09",
      "alerts": 0,
      "bars": 109,
      "close": 1004.36,
-     "open": 987.2
+     "open": 987.2,
+     "urgency_score": 9.2,
+     "zones": 2,
+     "urgent_bars": 10,
+     "burst": {
+      "bars": 7,
+      "shares": 1330000,
+      "minutes": 13,
+      "from": "11:46",
+      "to": "11:59",
+      "time_candles": 3,
+      "start_price": 991.83
+     }
     },
     {
      "date": "2026-06-10",
      "alerts": 0,
      "bars": 90,
      "close": 1000.08,
-     "open": 1009.1
+     "open": 1009.1,
+     "urgency_score": 3.3,
+     "zones": 1,
+     "urgent_bars": 3,
+     "burst": {
+      "bars": 2,
+      "shares": 380000,
+      "minutes": 2,
+      "from": "15:07",
+      "to": "15:10",
+      "time_candles": 1,
+      "start_price": 1003.96
+     }
     },
     {
      "date": "2026-06-11",
      "alerts": 0,
      "bars": 67,
      "close": 1000.56,
-     "open": 1003.0
+     "open": 1003.0,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-12",
      "alerts": 0,
      "bars": 52,
      "close": 1016.5,
-     "open": 1011.35
+     "open": 1011.35,
+     "urgency_score": 7.7,
+     "zones": 1,
+     "urgent_bars": 4,
+     "burst": {
+      "bars": 3,
+      "shares": 570000,
+      "minutes": 4,
+      "from": "10:24",
+      "to": "10:29",
+      "time_candles": 1,
+      "start_price": 1011.3
+     }
     },
     {
      "date": "2026-06-15",
      "alerts": 0,
      "bars": 55,
      "close": 1020.54,
-     "open": 1029.0
+     "open": 1029.0,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-16",
      "alerts": 0,
      "bars": 47,
      "close": 1015.52,
-     "open": 1021.15
+     "open": 1021.15,
+     "urgency_score": 2.1,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 190000,
+      "minutes": 2,
+      "from": "15:10",
+      "to": "15:11",
+      "time_candles": 1,
+      "start_price": 1015.27
+     }
     },
     {
      "date": "2026-06-17",
      "alerts": 0,
      "bars": 43,
      "close": 1026.67,
-     "open": 1015.3
+     "open": 1015.3,
+     "urgency_score": 2.3,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 180000,
+      "minutes": 1,
+      "from": "15:22",
+      "to": "15:23",
+      "time_candles": 1,
+      "start_price": 1027.83
+     }
     },
     {
      "date": "2026-06-18",
      "alerts": 0,
      "bars": 57,
      "close": 1042.46,
-     "open": 1029.0
+     "open": 1029.0,
+     "urgency_score": 21.1,
+     "zones": 1,
+     "urgent_bars": 12,
+     "burst": {
+      "bars": 12,
+      "shares": 2160000,
+      "minutes": 23,
+      "from": "11:36",
+      "to": "11:59",
+      "time_candles": 5,
+      "start_price": 1035.21
+     }
     }
    ],
    "last": 1042.46,
@@ -450,133 +1032,334 @@
      "alerts": 0,
      "bars": 29,
      "close": 1425.23,
-     "open": 1407.5
+     "open": 1407.5,
+     "urgency_score": 17.2,
+     "zones": 1,
+     "urgent_bars": 5,
+     "burst": {
+      "bars": 5,
+      "shares": 95000,
+      "minutes": 17,
+      "from": "15:11",
+      "to": "15:28",
+      "time_candles": 4,
+      "start_price": 1422.11
+     }
     },
     {
      "date": "2026-05-25",
      "alerts": 0,
      "bars": 50,
      "close": 1437.97,
-     "open": 1427.9
+     "open": 1427.9,
+     "urgency_score": 6.0,
+     "zones": 1,
+     "urgent_bars": 3,
+     "burst": {
+      "bars": 2,
+      "shares": 30000,
+      "minutes": 9,
+      "from": "11:06",
+      "to": "11:15",
+      "time_candles": 2,
+      "start_price": 1441.57
+     }
     },
     {
      "date": "2026-05-26",
      "alerts": 0,
      "bars": 116,
      "close": 1460.0,
-     "open": 1442.1
+     "open": 1442.1,
+     "urgency_score": 43.1,
+     "zones": 6,
+     "urgent_bars": 50,
+     "burst": {
+      "bars": 22,
+      "shares": 308000,
+      "minutes": 7,
+      "from": "12:51",
+      "to": "12:59",
+      "time_candles": 2,
+      "start_price": 1447.05
+     }
     },
     {
      "date": "2026-05-27",
      "alerts": 0,
      "bars": 113,
      "close": 1456.09,
-     "open": 1465.0
+     "open": 1465.0,
+     "urgency_score": 26.5,
+     "zones": 4,
+     "urgent_bars": 30,
+     "burst": {
+      "bars": 15,
+      "shares": 225000,
+      "minutes": 4,
+      "from": "09:51",
+      "to": "09:55",
+      "time_candles": 1,
+      "start_price": 1470.3
+     }
     },
     {
      "date": "2026-05-29",
      "alerts": 2,
      "bars": 224,
      "close": 1479.8,
-     "open": 1468.2
+     "open": 1468.2,
+     "urgency_score": 63.8,
+     "zones": 4,
+     "urgent_bars": 143,
+     "burst": {
+      "bars": 100,
+      "shares": 1700000,
+      "minutes": 22,
+      "from": "15:07",
+      "to": "15:28",
+      "time_candles": 5,
+      "start_price": 1484.4
+     }
     },
     {
      "date": "2026-06-01",
      "alerts": 4,
      "bars": 236,
      "close": 1539.33,
-     "open": 1514.2
+     "open": 1514.2,
+     "urgency_score": 38.1,
+     "zones": 13,
+     "urgent_bars": 90,
+     "burst": {
+      "bars": 14,
+      "shares": 294000,
+      "minutes": 17,
+      "from": "12:09",
+      "to": "12:26",
+      "time_candles": 4,
+      "start_price": 1551.35
+     }
     },
     {
      "date": "2026-06-02",
      "alerts": 4,
      "bars": 135,
      "close": 1570.0,
-     "open": 1567.1
+     "open": 1567.1,
+     "urgency_score": 17.8,
+     "zones": 5,
+     "urgent_bars": 24,
+     "burst": {
+      "bars": 10,
+      "shares": 270000,
+      "minutes": 13,
+      "from": "10:34",
+      "to": "10:47",
+      "time_candles": 3,
+      "start_price": 1577.61
+     }
     },
     {
      "date": "2026-06-03",
      "alerts": 0,
      "bars": 101,
      "close": 1470.59,
-     "open": 1518.4
+     "open": 1518.4,
+     "urgency_score": 8.9,
+     "zones": 3,
+     "urgent_bars": 9,
+     "burst": {
+      "bars": 4,
+      "shares": 116000,
+      "minutes": 3,
+      "from": "09:30",
+      "to": "09:32",
+      "time_candles": 1,
+      "start_price": 1518.4
+     }
     },
     {
      "date": "2026-06-04",
      "alerts": 0,
      "bars": 62,
      "close": 1488.06,
-     "open": 1486.8
+     "open": 1486.8,
+     "urgency_score": 1.6,
+     "zones": 0,
+     "urgent_bars": 1,
+     "burst": {
+      "bars": 1,
+      "shares": 30000,
+      "minutes": 3,
+      "from": "12:08",
+      "to": "12:11",
+      "time_candles": 1,
+      "start_price": 1480.17
+     }
     },
     {
      "date": "2026-06-05",
      "alerts": 0,
      "bars": 62,
      "close": 1483.45,
-     "open": 1511.6
+     "open": 1511.6,
+     "urgency_score": 8.1,
+     "zones": 1,
+     "urgent_bars": 5,
+     "burst": {
+      "bars": 4,
+      "shares": 120000,
+      "minutes": 5,
+      "from": "10:40",
+      "to": "10:45",
+      "time_candles": 2,
+      "start_price": 1495.74
+     }
     },
     {
      "date": "2026-06-08",
      "alerts": 0,
      "bars": 77,
      "close": 1499.87,
-     "open": 1465.6
+     "open": 1465.6,
+     "urgency_score": 16.9,
+     "zones": 3,
+     "urgent_bars": 13,
+     "burst": {
+      "bars": 5,
+      "shares": 145000,
+      "minutes": 5,
+      "from": "13:00",
+      "to": "13:05",
+      "time_candles": 1,
+      "start_price": 1507.11
+     }
     },
     {
      "date": "2026-06-09",
      "alerts": 0,
      "bars": 39,
      "close": 1485.96,
-     "open": 1497.9
+     "open": 1497.9,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-10",
      "alerts": 0,
      "bars": 34,
      "close": 1479.71,
-     "open": 1479.5
+     "open": 1479.5,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-11",
      "alerts": 0,
      "bars": 69,
      "close": 1469.07,
-     "open": 1447.6
+     "open": 1447.6,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-12",
      "alerts": 0,
      "bars": 87,
      "close": 1431.0,
-     "open": 1456.2
+     "open": 1456.2,
+     "urgency_score": 13.8,
+     "zones": 3,
+     "urgent_bars": 12,
+     "burst": {
+      "bars": 5,
+      "shares": 135000,
+      "minutes": 5,
+      "from": "14:55",
+      "to": "14:59",
+      "time_candles": 1,
+      "start_price": 1427.99
+     }
     },
     {
      "date": "2026-06-15",
      "alerts": 0,
      "bars": 64,
      "close": 1427.23,
-     "open": 1442.3
+     "open": 1442.3,
+     "urgency_score": 3.1,
+     "zones": 0,
+     "urgent_bars": 2,
+     "burst": {
+      "bars": 1,
+      "shares": 28000,
+      "minutes": 2,
+      "from": "12:35",
+      "to": "12:37",
+      "time_candles": 1,
+      "start_price": 1431.39
+     }
     },
     {
      "date": "2026-06-16",
      "alerts": 0,
      "bars": 70,
      "close": 1450.18,
-     "open": 1439.3
+     "open": 1439.3,
+     "urgency_score": 30.0,
+     "zones": 3,
+     "urgent_bars": 21,
+     "burst": {
+      "bars": 12,
+      "shares": 324000,
+      "minutes": 5,
+      "from": "14:10",
+      "to": "14:14",
+      "time_candles": 1,
+      "start_price": 1438.28
+     }
     },
     {
      "date": "2026-06-17",
      "alerts": 0,
      "bars": 68,
      "close": 1460.68,
-     "open": 1464.7
+     "open": 1464.7,
+     "urgency_score": 2.9,
+     "zones": 0,
+     "urgent_bars": 2,
+     "burst": {
+      "bars": 1,
+      "shares": 27000,
+      "minutes": 1,
+      "from": "12:54",
+      "to": "12:54",
+      "time_candles": 1,
+      "start_price": 1475.47
+     }
     },
     {
      "date": "2026-06-18",
      "alerts": 0,
      "bars": 69,
      "close": 1448.31,
-     "open": 1443.1
+     "open": 1443.1,
+     "urgency_score": 26.1,
+     "zones": 2,
+     "urgent_bars": 18,
+     "burst": {
+      "bars": 16,
+      "shares": 432000,
+      "minutes": 15,
+      "from": "15:02",
+      "to": "15:17",
+      "time_candles": 3,
+      "start_price": 1443.6
+     }
     }
    ],
    "last": 1448.31,
@@ -590,42 +1373,87 @@
      "alerts": 3,
      "bars": 160,
      "close": 25.14,
-     "open": 24.26
+     "open": 24.26,
+     "urgency_score": 11.2,
+     "zones": 5,
+     "urgent_bars": 18,
+     "burst": {
+      "bars": 5,
+      "shares": 11500000,
+      "minutes": 2,
+      "from": "10:12",
+      "to": "10:14",
+      "time_candles": 1,
+      "start_price": 24.71
+     }
     },
     {
      "date": "2026-06-18",
      "alerts": 0,
      "bars": 57,
      "close": 25.47,
-     "open": 25.58
+     "open": 25.58,
+     "urgency_score": 8.8,
+     "zones": 1,
+     "urgent_bars": 5,
+     "burst": {
+      "bars": 5,
+      "shares": 16000000,
+      "minutes": 4,
+      "from": "09:31",
+      "to": "09:35",
+      "time_candles": 1,
+      "start_price": 25.55
+     }
     },
     {
      "date": "2026-06-19",
      "alerts": 0,
      "bars": 37,
      "close": 25.41,
-     "open": 25.55
+     "open": 25.55,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-22",
      "alerts": 0,
      "bars": 47,
      "close": 24.95,
-     "open": 25.31
+     "open": 25.31,
+     "urgency_score": 6.4,
+     "zones": 1,
+     "urgent_bars": 3,
+     "burst": {
+      "bars": 3,
+      "shares": 8100000,
+      "minutes": 5,
+      "from": "12:50",
+      "to": "12:55",
+      "time_candles": 2,
+      "start_price": 25.1
+     }
     },
     {
      "date": "2026-06-23",
      "alerts": 0,
      "bars": 32,
      "close": 24.51,
-     "open": 24.94
+     "open": 24.94,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     },
     {
      "date": "2026-06-24",
      "alerts": 0,
      "bars": 16,
      "close": 24.92,
-     "open": 24.95
+     "open": 24.95,
+     "urgency_score": 0.0,
+     "zones": 0,
+     "urgent_bars": 0
     }
    ],
    "last": 24.92,
@@ -725,7 +1553,31 @@
    "open_hour",
    "log_pace",
    "vpin"
-  ]
+  ],
+  "urgency": {
+   "all_day": {
+    "urgent": 0.1994,
+    "other": 0.0856,
+    "lift": 2.3307,
+    "urgent_bars": 677,
+    "bars": 4721
+   },
+   "after_10_30": {
+    "urgent": 0.1921,
+    "other": 0.0544,
+    "lift": 3.5306,
+    "urgent_bars": 531,
+    "bars": 3674
+   },
+   "lift_range": [
+    2.2273,
+    2.4487
+   ],
+   "thresholds": [
+    0.3,
+    0.5
+   ]
+  }
  },
  "settings": {
   "bars_per_day": 75,

@@ -70,6 +70,34 @@ def test_indicators_never_use_future_bars(reliance):
         pd.testing.assert_series_equal(a[col], b[col], check_names=False)
 
 
+DISPLAY_COLUMNS = ["baseline_min", "pace", "speed", "streak", "zone", "fill_smooth",
+                   "vpin", "aai", "aai_smooth", "delta", "vol_regime"]
+
+
+def test_no_repaint_indicators(reliance):
+    """Replay guarantee: indicators computed on the first k bars equal the first k bars of
+    the full-history computation, for every column the chart draws."""
+    _, _, bars = reliance
+    raw = bars[["date", "start", "end", "open", "high", "low", "close", "volume", "buy_vol", "fill_min"]]
+    full = I.add_indicators(raw)
+    for k in [150, 700, len(raw) - 37]:
+        part = I.add_indicators(raw.iloc[:k])
+        for col in DISPLAY_COLUMNS:
+            pd.testing.assert_series_equal(part[col], full[col].iloc[:k], check_names=False, obj=f"{col} @ {k}")
+
+
+def test_no_repaint_bars(reliance):
+    """Cutting the minute data mid-day must reproduce exactly the bars completed by then."""
+    sess, sizes, bars = reliance
+    day = sorted(sizes)[len(sizes) // 2]
+    minutes = sess[sess["date"] == day]
+    cut = minutes["epoch"].iloc[len(minutes) // 2]
+    partial = B.build_bars(minutes[minutes["epoch"] < cut], {day: sizes[day]})
+    full = bars[bars["date"] == day].reset_index(drop=True)
+    cols = ["start", "end", "open", "high", "low", "close", "volume", "buy_vol"]
+    pd.testing.assert_frame_equal(partial[cols], full[cols].iloc[:len(partial)])
+
+
 def test_vpin_and_absorption_ranges(reliance):
     _, _, bars = reliance
     v = bars["vpin"].dropna()

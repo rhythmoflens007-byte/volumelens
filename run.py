@@ -12,7 +12,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from engine import bars as B, config as C, data, indicators as I, labels as L, model as M
+from engine import bars as B, config as C, data, indicators as I, labels as L, model as M, urgency as U
 
 ROOT = Path(__file__).parent
 OUT = ROOT / "web" / "data"
@@ -45,6 +45,9 @@ def main() -> None:
     results["folds"] = len(folds)
     results["test_days"] = sorted({d for f in folds for d in f["test_days"]})
     results["features"] = M.FEATURES
+    results["urgency"] = U.event_study(df)
+    u = results["urgency"]["all_day"]
+    print(f"urgency: big move after urgent bars {u['urgent']:.1%} vs {u['other']:.1%} ({u['lift']:.1f}x)")
     print(json.dumps({k: results[k] for k in ("rows", "big_moves", "base_rate", "auc", "catch_rate", "precision")}, indent=1))
 
     probs, contrib = M.cross_fit(df)
@@ -90,9 +93,11 @@ def export(df, alerts, sessions, sizes, results) -> None:
                        "candles": [[int(c.time) + C.IST_OFFSET_SECONDS, _r(c.open), _r(c.high), _r(c.low), _r(c.close), int(c.volume)]
                                    for c in candles.itertuples()],
                        "bars": rows, "alerts": day_alerts}
+            stats = U.day_stats(day)
+            payload["urgency"] = stats
             (OUT / sym / f"{date}.json").write_text(json.dumps(payload, separators=(",", ":")))
             day_meta.append({"date": date, "alerts": len(day_alerts), "bars": len(rows),
-                             "close": _r(day["close"].iat[-1]), "open": _r(day["open"].iat[0])})
+                             "close": _r(day["close"].iat[-1]), "open": _r(day["open"].iat[0]), **stats})
         last, prev = day_meta[-1], (day_meta[-2] if len(day_meta) > 1 else day_meta[-1])
         index["stocks"].append({"symbol": sym, "dates": day_meta, "last": last["close"],
                                 "change": _r((last["close"] / prev["close"] - 1) * 100, 2)})
