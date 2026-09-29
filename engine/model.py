@@ -18,7 +18,7 @@ TEST_BLOCK_DAYS = 3
 MIN_TRAIN_DAYS = 8
 EMBARGO_DAYS = 1
 ALERT_QUANTILE = 0.95
-ALERT_COOLDOWN_BARS = 8
+ALERT_COOLDOWN_SECONDS = 15 * 60   # one burst -> one alert, even if it spans many bars
 MAX_ALERTS_PER_DAY = 6
 
 
@@ -142,11 +142,11 @@ def pick_alerts(df: pd.DataFrame, probs: pd.Series, contrib: pd.DataFrame) -> pd
     thr = float(np.nanquantile(probs, ALERT_QUANTILE))
     alerts = []
     for (sym, date), g in df.assign(prob=probs).groupby(["symbol", "date"], sort=False):
-        last = -10**9
+        last_end = -10**12
         for pos, (idx, row) in enumerate(g.iterrows()):
-            if np.isnan(row["prob"]) or row["prob"] < thr or pos - last < ALERT_COOLDOWN_BARS:
+            if np.isnan(row["prob"]) or row["prob"] < thr or row["end"] - last_end < ALERT_COOLDOWN_SECONDS:
                 continue
-            last = pos
+            last_end = row["end"]
             c = contrib.loc[idx, FEATURES]
             top = [f for f in c.sort_values(ascending=False).index
                    if c[f] > 0 and not pd.isna(row[f])][:3]
@@ -164,14 +164,14 @@ def pick_alerts(df: pd.DataFrame, probs: pd.Series, contrib: pd.DataFrame) -> pd
 
 def _kind(r) -> str:
     if r["speed"] == "fast" and r["aai_smooth"] > 0.4:
-        return "Rush + Absorption"
+        return "Urgent volume, price held"
     if r["zone"]:
-        return "Fast inflow zone"
+        return "Urgent inflow"
     if r["aai_smooth"] > 0.4:
-        return "Absorption"
+        return "Price held on heavy volume"
     if r["vol_regime"] > 1.5:
         return "Volatility build-up"
-    return "Flow anomaly"
+    return "Unusual flow"
 
 
 def _reason(f: str, r) -> str:

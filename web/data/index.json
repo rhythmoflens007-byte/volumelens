@@ -1,5 +1,5 @@
 {
- "generated": "2026-09-28 22:37",
+ "generated": "2026-09-29 15:05",
  "stocks": [
   {
    "symbol": "NARMADA",
@@ -195,7 +195,7 @@
     },
     {
      "date": "2026-05-29",
-     "alerts": 6,
+     "alerts": 3,
      "bars": 221,
      "close": 1320.6,
      "open": 1351.0
@@ -356,7 +356,7 @@
     },
     {
      "date": "2026-06-03",
-     "alerts": 6,
+     "alerts": 2,
      "bars": 167,
      "close": 971.87,
      "open": 944.25
@@ -461,14 +461,14 @@
     },
     {
      "date": "2026-05-26",
-     "alerts": 4,
+     "alerts": 2,
      "bars": 116,
      "close": 1460.0,
      "open": 1442.1
     },
     {
      "date": "2026-05-27",
-     "alerts": 3,
+     "alerts": 2,
      "bars": 113,
      "close": 1456.09,
      "open": 1465.0
@@ -482,14 +482,14 @@
     },
     {
      "date": "2026-06-01",
-     "alerts": 6,
+     "alerts": 4,
      "bars": 236,
      "close": 1539.33,
      "open": 1514.2
     },
     {
      "date": "2026-06-02",
-     "alerts": 5,
+     "alerts": 4,
      "bars": 135,
      "close": 1570.0,
      "open": 1567.1
@@ -587,7 +587,7 @@
    "dates": [
     {
      "date": "2026-06-17",
-     "alerts": 6,
+     "alerts": 2,
      "bars": 160,
      "close": 25.14,
      "open": 24.26

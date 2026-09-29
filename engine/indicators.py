@@ -78,6 +78,10 @@ def _absorption(b: pd.DataFrame) -> None:
     move = np.log(b["close"] / prev_close).abs()
     expected = move.shift(1).rolling(C.AAI_WINDOW, min_periods=C.AAI_MIN_BARS).median()
     aai = 1 - move / expected.replace(0, np.nan)
+    # A bar that starts and ends inside one minute has no measurable price path in 1-minute
+    # data (the even split inside the minute would fake "no move"), so it gets no reading.
+    inside_one_minute = (b["start"] // 60) == ((b["end"] - 1e-6) // 60)
+    aai = aai.mask(inside_one_minute)
     b["move"] = move
     b["aai"] = aai.clip(lower=C.AAI_FLOOR, upper=1.0)
     b["aai_smooth"] = b.groupby("date")["aai"].transform(

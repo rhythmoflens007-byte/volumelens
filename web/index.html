@@ -6,7 +6,7 @@
 <title>VolumeLens</title>
 <meta name="description" content="Volume-normalized charts for NSE stocks: time candles, adaptive volume candles, fill-time and VPIN, absorption and explained alerts.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' fill='%23089981'/%3E%3Crect x='6.5' y='2' width='3' height='12' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' fill='%23F23645'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/app.css?v=8">
+<link rel="stylesheet" href="css/app.css?v=10">
 </head>
 <body>
 <header class="toolbar">
@@ -71,15 +71,15 @@
   <h2>How to read VolumeLens</h2>
   <dl>
     <dt>Time chart</dt>
-    <dd>Normal 5-minute candles. Orange shading marks the minutes where volume flowed in unusually fast.</dd>
+    <dd>Normal 5-minute candles. Orange shading marks urgent minutes, where volume flowed in unusually fast.</dd>
     <dt>Volume candles</dt>
     <dd>Each candle is a fixed number of shares, not a fixed number of minutes. The size adapts per stock from its previous 20 days. <span class="swatch fast"></span>Orange candles filled fast: the last 3 bars took under 40% of their normal time.</dd>
     <dt>Fill time + VPIN</dt>
     <dd>Bars show how many minutes each volume candle took to fill; a short bar means volume arrived fast. The white line is the smoothed fill time, the dashed line is the normal fill time for that moment. The blue line is VPIN (0–1): how one-sided buying versus selling was over the last 50 candles.</dd>
     <dt>Absorption</dt>
-    <dd>1 − actual price move ÷ expected move. Near 1: heavy trading but the price barely moved, so someone absorbed the flow. Below 0: price moved more than usual.</dd>
+    <dd>1 − actual price move ÷ expected move. Near 1: heavy trading but the price barely moved (the price held). Below 0: the price moved more than usual. Shown for context; it does not feed the alert model.</dd>
     <dt>Alerts</dt>
-    <dd>A LightGBM model scores every candle for the chance of a big move (a 30-minute range over 2× normal). The top 4% of scores become alerts (at most 6 per stock per day), each listing the signals that drove it (TreeSHAP). Scores come from models that never saw that day.</dd>
+    <dd>A LightGBM model scores every candle for the chance of a big move (a 30-minute range over 2× normal). The top 4% of scores become alerts (at most 6 per stock per day), each listing the signals that drove it (TreeSHAP). Scores come from models that never saw that day. Alerts flag urgency and a higher chance of a large move in either direction; they do not say which way the price will go or who is trading.</dd>
     <dt>Controls</dt>
     <dd>Scroll to zoom, drag to pan, double-click a scale to reset. ← → step through volume candles. Esc fits the whole day.</dd>
   </dl>
@@ -87,6 +87,6 @@
 </dialog>
 
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
-<script src="js/app.js?v=8"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>

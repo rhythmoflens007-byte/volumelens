@@ -48,6 +48,13 @@ trees overfitted in walk-forward testing (AUC 0.48–0.60), because the rate of 
 from 0% to 38% between days and there are only ~30 trading days of data. The final model is
 deliberately small. Absorption is shown on the chart but did not improve prediction.
 
+**What it detects, and what it does not.** `verify.py` checks the signal directly. After a fast
+(urgent) bar a big move follows 25% of the time versus 9% after a normal bar (22% vs 5.5% outside
+the opening hour), and shuffling fill times within each day removes most of the effect. But after
+a fast-inflow zone the price continued in the same direction only 52% of the time (113 zones,
+chance range 41–59%). VolumeLens therefore detects **urgency and coming volatility**, not
+direction, and 1-minute data cannot say *who* traded (institution, algorithm or news reaction).
+
 **Limits.** 6 stocks, 8–28 days each, 1-minute data (no order book). Results should be
 re-checked on more stocks and a longer period before relying on them.
 
