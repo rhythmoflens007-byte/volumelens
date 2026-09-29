@@ -29,8 +29,16 @@ def main() -> None:
             o = prev if prev is not None else r[2]
             bricks.append([r[1], r[0], o, r[5], r[11], r[12]])
         prev = r[5]
+    idx = json.loads((WEB / "data" / "index.json").read_text())
+    scanner = []
+    for st in idx["stocks"]:                               # latest session per stock, most urgent first
+        m = st["sessions"][-1]
+        b = m.get("burst") or {}
+        scanner.append({"symbol": st["symbol"], "date": m["date"], "urgency": round(m["urgency_score"], 1),
+                        "burst": f"{b['from']}–{b['to']}" if b else None, "last": st["last"], "change": round(st["change"], 2)})
+    scanner.sort(key=lambda r: -r["urgency"])
     out = {"symbol": SYMBOL, "date": DATE, "from": FROM, "to": TO, "t0": t0, "t1": t1, "size": s["size"]["standard"],
-           "candles": list(candles.values()), "bricks": bricks}
+           "candles": list(candles.values()), "bricks": bricks, "scanner": scanner}
     (WEB / "data" / "hero.json").write_text(json.dumps(out, separators=(",", ":")))
     print(f"hero.json: {len(out['candles'])} five-minute candles, {len(bricks)} bricks, "
           f"{sum(b[5] == 2 for b in bricks)} urgent")

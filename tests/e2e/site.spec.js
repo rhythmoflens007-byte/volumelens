@@ -24,6 +24,37 @@ test('landing: the hero animation turns time candles into urgent bricks, then li
   await page.waitForFunction(() => document.getElementById('state-overlay')?.classList.contains('hidden'));
 });
 
+test('no dead links or buttons: every link resolves, every button does something', async ({ page, request }) => {
+  for (const url of ['/', '/research.html']) {
+    await page.goto(url);
+    const hrefs = await page.$$eval('a[href]', (as) => as.map((a) => a.getAttribute('href')));
+    for (const h of hrefs) {
+      if (/^https?:/.test(h)) continue;                                    // external (TradingView attribution)
+      if (h.startsWith('#')) { expect(await page.locator(h).count(), `${url} ${h}`).toBe(1); continue; }
+      const res = await request.get(`/${h.split('#')[0]}`);
+      expect(res.status(), `${url} → ${h}`).toBe(200);
+    }
+  }
+  await page.goto('/');
+  await expect(page.locator('#caption')).toContainText('urgent bricks', { timeout: 15_000 });
+  await page.click('#m-time');                                             // back to the time chart
+  await expect(page.locator('#m-time')).toHaveAttribute('aria-pressed', 'true', { timeout: 5000 });
+  await expect(page.locator('#caption')).toContainText('ordinary candles');
+  await page.click('#m-vol');                                              // and to share time again
+  await expect(page.locator('#m-vol')).toHaveAttribute('aria-pressed', 'true', { timeout: 5000 });
+  await expect(page.locator('#replay')).toBeVisible({ timeout: 5000 });
+  await page.click('#replay');
+  await expect(page.locator('#caption')).toContainText('urgent bricks', { timeout: 15_000 });
+  await expect(page.locator('#market-text')).not.toContainText('Checking');
+  const rows = page.locator('#scanner tbody tr[data-href]');
+  expect(await rows.count()).toBe(11);
+  await rows.first().locator('td').nth(2).click();                         // a whole row opens that stock
+  await page.waitForURL(/terminal\.html#\w+/);
+  const sym = decodeURIComponent(new URL(page.url()).hash.slice(1));
+  await page.waitForFunction(() => document.getElementById('state-overlay')?.classList.contains('hidden'));
+  await expect(page.locator('#symbol-input')).toHaveValue(sym);
+});
+
 test('research page and navigation', async ({ page }) => {
   await page.goto('/research.html');
   await expect(page.locator('h1')).toContainText('Volume-Normalized');

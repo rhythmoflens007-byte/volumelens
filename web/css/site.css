@@ -146,3 +146,30 @@ footer .sp { flex: 1; }
 .doc-body .chapter-no { margin-bottom: 14px; }
 .doc .meta { margin-top: 0; }
 .nav .btn { white-space: nowrap; }
+
+/* interactive figure toggle */
+.mode button { border: 0; background: transparent; padding: 7px 10px; color: var(--ink-3); font: inherit; cursor: pointer; transition: background .3s, color .3s; }
+.mode button.on { background: var(--ink); color: var(--paper); }
+.mode button:not(.on):hover { color: var(--ink); }
+
+/* latest-session scanner */
+table.scan tbody tr { cursor: pointer; transition: background .2s; }
+table.scan tbody tr:hover { background: var(--paper-2); }
+table.scan td a { text-decoration: none; font-weight: 600; }
+table.scan tbody tr:hover td a { color: var(--accent); }
+.meter { display: inline-flex; align-items: center; gap: 12px; font-family: var(--mono); }
+.meter i { display: block; height: 6px; width: 140px; background: var(--paper-2); position: relative; }
+.meter i::after { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--w); background: var(--ink); transform-origin: left; transform: scaleX(0); transition: transform 1s cubic-bezier(.2,.7,.2,1); }
+.meter.hot i::after { background: var(--accent); }
+.scan.in .meter i::after { transform: scaleX(1); }
+td.up { color: #177a5b; } td.down { color: #c23b3f; }
+td.muted { color: var(--ink-3); }
+
+/* market status */
+.status { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 6px 0 0; padding: 14px 16px; border: 1px solid var(--rule); background: #fbf9f4; font-size: 15.5px; }
+.status .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); flex: none; }
+.status.open .pulse { background: #177a5b; box-shadow: 0 0 0 0 rgba(23,122,91,.5); animation: pulse 2s infinite; }
+.status a { margin-left: auto; font-weight: 500; }
+@keyframes pulse { 70% { box-shadow: 0 0 0 7px rgba(23,122,91,0); } 100% { box-shadow: 0 0 0 0 rgba(23,122,91,0); } }
+@media (prefers-reduced-motion: reduce) { .status.open .pulse { animation: none; } .meter i::after { transition: none; } }
+@media (max-width: 900px) { .meter i { width: 70px; } table.scan th:nth-child(3), table.scan td:nth-child(3) { display: none; } .status a { margin-left: 0; } }

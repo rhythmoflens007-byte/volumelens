@@ -115,7 +115,7 @@ async function hero(cv) {
     [3600, `…laid out by shares traded, not by the clock.`],
     [5400, `<span class="hot"><b>${urgent.length} urgent bricks</b></span>. The burst was there all along.`],
   ];
-  let start = 0, last = 0, raf = 0, capIdx = -1;
+  let last = 0, raf = 0, capIdx = -1, run = 0;
   const p = (t, [a, b]) => clamp((t - a) / (b - a));
 
   function frame(t) {
@@ -128,18 +128,22 @@ async function hero(cv) {
     timeLabels(1 - m);
     const k = CAP.findLastIndex(([at]) => t >= at);
     if (k !== capIdx) { capIdx = k; caption.innerHTML = CAP[k][1]; }
-    mTime.classList.toggle('on', m < 0.5); mVol.classList.toggle('on', m >= 0.5);
+    const shares = m >= 0.5;
+    mTime.classList.toggle('on', !shares); mVol.classList.toggle('on', shares);
+    mTime.setAttribute('aria-pressed', String(!shares)); mVol.setAttribute('aria-pressed', String(shares));
   }
-  function loop(now) {
-    if (!start) start = now;
-    const t = now - start;
-    frame(Math.min(t, T.end));
-    if (t < T.end) tick(loop); else replay.hidden = false;
-  }
-  function play() {
-    cancelAnimationFrame(raf); start = 0; capIdx = -1; replay.hidden = true;
-    if (reduced) { frame(T.end); replay.hidden = false; return; }
-    tick(loop);
+  /** Play the timeline from where it is to `to` (forwards or backwards), `rate` × real time. */
+  function playTo(to, rate = 1) {
+    const id = ++run, from = last, start = performance.now(), dur = Math.abs(to - from) / rate;
+    replay.hidden = true;
+    if (reduced || dur < 1) { frame(to); replay.hidden = to !== T.end; return; }
+    const step = (now) => {
+      if (id !== run) return;
+      const f = clamp((now - start) / dur);
+      frame(from + (to - from) * f);
+      if (f < 1) tick(step); else replay.hidden = to !== T.end;
+    };
+    tick(step);
   }
   // animation frame, with a timer fallback for throttled or background tabs
   function tick(fn) {
@@ -147,8 +151,61 @@ async function hero(cv) {
     raf = requestAnimationFrame((t) => { done = true; fn(t); });
     setTimeout(() => { if (!done) { cancelAnimationFrame(raf); fn(performance.now()); } }, 60);
   }
-  replay.addEventListener('click', play);
+  replay.addEventListener('click', () => { frame(0); playTo(T.end); });
+  mVol.addEventListener('click', () => playTo(T.end, last < T.bricksIn[0] ? 2 : 1));       // to share time
+  mTime.addEventListener('click', () => playTo(T.burst[1], 1.4));                          // back to clock time, burst marked
   frame(0);
-  const seen = new IntersectionObserver((es) => { if (es[0].isIntersecting) { seen.disconnect(); setTimeout(play, 350); } }, { threshold: 0.35 });
+  const seen = new IntersectionObserver((es) => { if (es[0].isIntersecting) { seen.disconnect(); setTimeout(() => playTo(T.end), 350); } }, { threshold: 0.35 });
   seen.observe(cv);
 }
+
+// ---------- latest-session scanner (rows open the stock in the terminal)
+async function scanner(el) {
+  let d;
+  try { d = await (await fetch('data/hero.json')).json(); }
+  catch (e) { el.querySelector('tbody').innerHTML = '<tr><td colspan="5" class="muted">Could not load the latest session.</td></tr>'; return; }
+  const rows = d.scanner || [], top = Math.max(1, ...rows.map((r) => r.urgency));
+  el.querySelector('tbody').innerHTML = rows.map((r) => `<tr data-href="terminal.html#${r.symbol}">
+    <td><a href="terminal.html#${r.symbol}">${r.symbol}</a></td>
+    <td><span class="meter${r.urgency >= 30 ? ' hot' : ''}"><i style="--w:${(100 * r.urgency / top).toFixed(1)}%"></i>${r.urgency.toFixed(0)}%</span></td>
+    <td class="n">${r.burst || '—'}</td><td class="n">${r.last.toFixed(2)}</td>
+    <td class="n ${r.change >= 0 ? 'up' : 'down'}">${r.change >= 0 ? '+' : ''}${r.change.toFixed(2)}%</td></tr>`).join('');
+  el.addEventListener('click', (e) => { const tr = e.target.closest('tr[data-href]'); if (tr && !e.target.closest('a')) location.href = tr.dataset.href; });
+  const date = rows[0] ? new Date(`${rows[0].date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+  document.getElementById('scan-note').textContent = `Session of ${date}, Medium box size. Urgent volume is the share of the day's volume that traded in urgent bricks.`;
+}
+const scan = document.getElementById('scanner');
+if (scan) scanner(scan);
+
+// ---------- NSE market status (Monday–Friday, 09:15–15:30 IST)
+const market = document.getElementById('market');
+if (market) {
+  const update = () => {
+    const now = new Date(), ist = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 60000);
+    const mins = ist.getHours() * 60 + ist.getMinutes(), day = ist.getDay(), open = day >= 1 && day <= 5 && mins >= 555 && mins < 930;
+    const clock = `${String(ist.getHours()).padStart(2, '0')}:${String(ist.getMinutes()).padStart(2, '0')}`;
+    market.classList.toggle('open', open);
+    document.getElementById('market-text').textContent = open
+      ? `NSE is open (${clock} IST). Bricks print live in the terminal as shares trade.`
+      : `NSE is closed (${clock} IST). It opens at 09:15 IST, Monday to Friday. Every recorded session is available now.`;
+    document.getElementById('market-link').textContent = open ? 'Watch it live →' : 'Explore recorded sessions →';
+  };
+  update();
+  setInterval(update, 30000);
+}
+
+// ---------- numbers count up when they come into view
+const counters = new IntersectionObserver((es) => es.forEach((e) => {
+  if (!e.isIntersecting) return;
+  counters.unobserve(e.target);
+  const el = e.target, text = el.textContent.trim(), m = text.match(/^(\d+(?:\.\d+)?)(.*)$/);
+  if (!m || reduced) return;
+  const target = parseFloat(m[1]), dec = (m[1].split('.')[1] || '').length, start = performance.now();
+  const step = (now) => {
+    const f = Math.min(1, (now - start) / 900);
+    el.textContent = `${(target * (1 - (1 - f) ** 3)).toFixed(dec)}${m[2]}`;
+    if (f < 1) requestAnimationFrame(step); else el.textContent = text;
+  };
+  requestAnimationFrame(step);
+}), { threshold: 0.6 });
+setTimeout(() => document.querySelectorAll('.fact .v').forEach((el) => counters.observe(el)), 600);   // after the figure sets its counts

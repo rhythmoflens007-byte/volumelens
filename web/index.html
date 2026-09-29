@@ -9,7 +9,7 @@
 <meta property="og:description" content="Charts that tick by shares, not minutes. Volume Bricks and an Urgency Index for NSE stocks.">
 <meta name="theme-color" content="#f5f2eb">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%2316150f'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23b4410f'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%2316150f'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/site.css?v=3">
+<link rel="stylesheet" href="css/site.css?v=4">
 </head>
 <body>
 
@@ -18,6 +18,7 @@
     <a class="brand" href="index.html" aria-label="VolumeLens home"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="6" width="3" height="8" rx="1"/><rect class="hot" x="6.5" y="2" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="6" rx="1"/></svg>VolumeLens</a>
     <nav class="nav-links" aria-label="Site">
       <a href="#method" class="hide-sm">Method</a>
+      <a href="#today" class="hide-sm">Latest session</a>
       <a href="#evidence" class="hide-sm">Evidence</a>
       <a href="research.html">Research</a>
     </nav>
@@ -38,7 +39,7 @@
 
     <figure class="fig reveal d2" aria-label="The same 90 minutes of RELIANCE, charted by time and by shares">
       <div class="fig-head"><span class="fig-no">Figure 1</span><span class="fig-title">RELIANCE, 29 September 2026, 09:30–11:00. The same trades, charted two ways.</span>
-        <span class="mode" aria-hidden="true"><span id="m-time" class="on">By time</span><span id="m-vol">By shares</span></span></div>
+        <span class="mode" role="group" aria-label="Chart the figure by"><button type="button" id="m-time" class="on" aria-pressed="true">By time</button><button type="button" id="m-vol" aria-pressed="false">By shares</button></span></div>
       <div class="plot"><canvas id="hero-canvas"></canvas></div>
       <figcaption><p class="caption" id="caption" aria-live="polite">&nbsp;</p><button class="btn small" id="replay" hidden>Play again</button></figcaption>
     </figure>
@@ -78,9 +79,24 @@
     </div>
   </section>
 
+  <section class="block" id="today">
+    <div class="chapter">
+      <div class="chapter-no"><b>03</b>Latest session</div>
+      <div>
+        <h2 class="reveal">Where the market was in a hurry.</h2>
+        <p class="sub reveal">Share of each stock's volume that traded in urgent bricks on the latest recorded session, and its largest burst. Select a stock to open it in the terminal.</p>
+        <table class="t scan reveal d1" id="scanner">
+          <thead><tr><th>Stock</th><th>Urgent volume</th><th class="n">Largest burst</th><th class="n">Close</th><th class="n">Change</th></tr></thead>
+          <tbody><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
+        </table>
+        <p class="note reveal" id="scan-note"></p>
+      </div>
+    </div>
+  </section>
+
   <section class="block" id="evidence">
     <div class="chapter">
-      <div class="chapter-no"><b>03</b>Evidence</div>
+      <div class="chapter-no"><b>04</b>Evidence</div>
       <div>
         <h2 class="reveal">Tested on sessions the model had never seen.</h2>
         <p class="sub reveal">Walk-forward backtest on 11 NSE large caps: 74 unseen sessions, 37,292 bricks, block-bootstrap 95% intervals.</p>
@@ -101,9 +117,10 @@
 
   <section class="block">
     <div class="chapter">
-      <div class="chapter-no"><b>04</b>The terminal</div>
+      <div class="chapter-no"><b>05</b>The terminal</div>
       <div>
         <h2 class="reveal">A working charting terminal.</h2>
+        <div class="status reveal" id="market"><span class="pulse"></span><span id="market-text">Checking NSE market hours…</span><a href="terminal.html" id="market-link">Open the terminal →</a></div>
         <div class="features">
           <div class="feature reveal"><h3>Volume Bricks</h3><p>Bricks, candles or an urgency line; small, medium or large box size.</p></div>
           <div class="feature reveal d1"><h3>Live NSE feed</h3><p>During market hours bricks print as shares trade; the next brick fills in front of you.</p></div>
@@ -118,7 +135,7 @@
 
   <section class="final">
     <div class="chapter">
-      <div class="chapter-no"><b>05</b>Try it</div>
+      <div class="chapter-no"><b>06</b>Try it</div>
       <div>
         <h2 class="reveal">Charts that tick by shares, not minutes.</h2>
         <div class="cta reveal d1"><a class="btn primary" href="terminal.html">Open the terminal <span class="arr">→</span></a><a class="btn" href="research.html">Read the research</a></div>
@@ -137,6 +154,6 @@
   </div>
 </footer>
 
-<script type="module" src="js/site.js?v=3"></script>
+<script type="module" src="js/site.js?v=4"></script>
 </body>
 </html>
