@@ -1,62 +1,65 @@
 {
  "rows": 3804,
- "big_moves": 519,
- "base_rate": 0.1364,
+ "big_moves": 447,
+ "base_rate": 0.1175,
  "alert_rate": 0.2013,
  "auc": {
-  "time_chart": 0.7427,
-  "vpin": 0.6526,
-  "volume_bars": 0.6803,
-  "volumelens": 0.7759
+  "time_chart": 0.7199,
+  "vpin": 0.6575,
+  "volume_bars": 0.6684,
+  "recent_volatility": 0.7709,
+  "volumelens": 0.7785
  },
  "catch_rate": {
-  "time_chart": 0.4605,
-  "vpin": 0.4374,
-  "volume_bars": 0.395,
-  "volumelens": 0.5164
+  "time_chart": 0.4295,
+  "vpin": 0.4564,
+  "volume_bars": 0.3714,
+  "recent_volatility": 0.4586,
+  "volumelens": 0.5145
  },
  "precision": {
-  "time_chart": 0.3153,
-  "vpin": 0.3007,
-  "volume_bars": 0.2697,
-  "volumelens": 0.3499
+  "time_chart": 0.2533,
+  "vpin": 0.2702,
+  "volume_bars": 0.2184,
+  "recent_volatility": 0.3024,
+  "volumelens": 0.3003
  },
  "per_stock": {
   "NARMADA": {
    "rows": 207,
-   "big_moves": 39,
-   "auc_vpin": 0.5998,
-   "auc_volumelens": 0.6244
+   "big_moves": 28,
+   "auc_vpin": 0.6085,
+   "auc_volumelens": 0.7251
   },
   "PNB": {
    "rows": 336,
-   "big_moves": 13,
-   "auc_vpin": 0.3835,
-   "auc_volumelens": 0.4626
+   "big_moves": 12,
+   "auc_vpin": 0.4235,
+   "auc_volumelens": 0.4976
   },
   "RELIANCE": {
    "rows": 910,
-   "big_moves": 75,
-   "auc_vpin": 0.4923,
-   "auc_volumelens": 0.712
+   "big_moves": 66,
+   "auc_vpin": 0.491,
+   "auc_volumelens": 0.7361
   },
   "SBIN": {
    "rows": 1002,
-   "big_moves": 162,
-   "auc_vpin": 0.7787,
-   "auc_volumelens": 0.8242
+   "big_moves": 133,
+   "auc_vpin": 0.7692,
+   "auc_volumelens": 0.8295
   },
   "TECHM": {
    "rows": 1048,
-   "big_moves": 157,
-   "auc_vpin": 0.6171,
-   "auc_volumelens": 0.739
+   "big_moves": 139,
+   "auc_vpin": 0.6276,
+   "auc_volumelens": 0.7303
   },
   "YESBANK": {
    "rows": 301,
-   "big_moves": 73,
-   "auc_vpin": 0.6732,
-   "auc_volumelens": 0.8558
+   "big_moves": 69,
+   "auc_vpin": 0.705,
+   "auc_volumelens": 0.8478
   }
  },
  "folds": 7,
@@ -84,8 +87,9 @@
  ],
  "features": [
   "vol_spike_log",
+  "recent_range_log",
+  "open_hour",
   "log_pace",
-  "vpin",
-  "open_hour"
+  "vpin"
  ]
 }

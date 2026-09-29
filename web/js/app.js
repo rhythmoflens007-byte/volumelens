@@ -336,7 +336,7 @@
 
   function renderResults() {
     const r = state.index.results;
-    const rows = [['Time chart (5-min volume)', 'time_chart'], ['VPIN (rebuilt)', 'vpin'], ['Volume bars only', 'volume_bars'], ['VolumeLens', 'volumelens']];
+    const rows = [['VPIN (rebuilt)', 'vpin'], ['Volume bars only', 'volume_bars'], ['Time chart: volume spike', 'time_chart'], ['Time chart: 30-min range', 'recent_volatility'], ['VolumeLens', 'volumelens']];
     $('results').innerHTML = '<thead><tr><th>Method</th><th>AUC</th><th>Caught</th></tr></thead><tbody>' +
       rows.map(([label, k]) => `<tr class="${k === 'volumelens' ? 'ours' : ''}"><td>${label}</td><td>${fmt(r.auc[k], 3)}</td><td>${Math.round(r.catch_rate[k] * 100)}%</td></tr>`).join('') + '</tbody>';
     const wins = Object.values(r.per_stock).filter((s) => s.auc_volumelens > s.auc_vpin).length;

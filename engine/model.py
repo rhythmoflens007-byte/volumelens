@@ -7,8 +7,9 @@ import lightgbm as lgb
 # Kept deliberately small: with ~30 trading days, larger feature sets and deeper trees
 # overfitted in walk-forward tests (see README). Monotone constraints encode the only
 # direction each signal is allowed to push the risk.
-FEATURES = ["vol_spike_log", "log_pace", "vpin", "open_hour"]
-MONOTONE = [1, -1, 1, 1]
+# Same signal set that backtest.py validates as "VolumeLens": time-chart context plus the volume clock.
+FEATURES = ["vol_spike_log", "recent_range_log", "open_hour", "log_pace", "vpin"]
+MONOTONE = [1, 1, 1, -1, 1]
 
 PARAMS = dict(objective="binary", learning_rate=0.05, num_leaves=3, min_data_in_leaf=150,
               lambda_l2=10.0, monotone_constraints=MONOTONE,
@@ -29,6 +30,7 @@ def add_features(b: pd.DataFrame) -> pd.DataFrame:
     b["zone"] = b["zone"].astype(int)
     b["vol_spike_log"] = np.log(b["time_vol_spike"].clip(0.01, 50))
     b["open_hour"] = (b["tod"] < 75).astype(int)          # 09:15-10:30
+    b["recent_range_log"] = np.log(b["recent_range"].clip(0.01, 50))
     return b
 
 
@@ -36,27 +38,29 @@ class Model:
     """LightGBM plus a past-only calibration: a prediction is reported as its percentile
     among the model's own training predictions, so scores mean the same thing in every fold."""
 
-    def __init__(self, rows: pd.DataFrame):
+    def __init__(self, rows: pd.DataFrame, features=None, monotone=None):
+        self.features = features or FEATURES
         y = rows["big_move"].to_numpy()
         pos = max(1.0, y.sum())
-        params = dict(PARAMS, scale_pos_weight=(len(y) - pos) / pos)
-        self.booster = lgb.train(params, lgb.Dataset(rows[FEATURES], y), ROUNDS)
-        self.ref = np.sort(self.booster.predict(rows[FEATURES]))
+        params = dict(PARAMS, scale_pos_weight=(len(y) - pos) / pos,
+                      monotone_constraints=monotone or MONOTONE)
+        self.booster = lgb.train(params, lgb.Dataset(rows[self.features], y), ROUNDS)
+        self.ref = np.sort(self.booster.predict(rows[self.features]))
 
     def predict(self, rows: pd.DataFrame) -> np.ndarray:
-        raw = self.booster.predict(rows[FEATURES])
+        raw = self.booster.predict(rows[self.features])
         return np.searchsorted(self.ref, raw, side="right") / len(self.ref)
 
     def contributions(self, rows: pd.DataFrame) -> np.ndarray:
         """Exact TreeSHAP values (log-odds) per feature, plus the bias column."""
-        return self.booster.predict(rows[FEATURES], pred_contrib=True)
+        return self.booster.predict(rows[self.features], pred_contrib=True)
 
 
-def _train(rows: pd.DataFrame) -> Model:
-    return Model(rows)
+def _train(rows: pd.DataFrame, features=None, monotone=None) -> Model:
+    return Model(rows, features, monotone)
 
 
-def walk_forward(df: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
+def walk_forward(df: pd.DataFrame, features=None, monotone=None) -> tuple[pd.DataFrame, list[dict]]:
     """Strict walk-forward: every test block is predicted by a model trained only on
     earlier days, with a 1-day gap between training and testing."""
     labelled = df[df["big_move"].notna()]
@@ -69,7 +73,7 @@ def walk_forward(df: pd.DataFrame) -> tuple[pd.DataFrame, list[dict]]:
         test = labelled[labelled["date"].isin(test_dates)]
         if train["big_move"].sum() < 20 or test.empty:
             continue
-        model = _train(train)
+        model = _train(train, features, monotone)
         preds.append(pd.Series(model.predict(test), index=test.index))
         folds.append({"train_days": len(train_dates), "test_days": test_dates,
                       "train_rows": len(train), "test_rows": len(test)})
@@ -117,6 +121,7 @@ def evaluate(oos: pd.DataFrame, fast_rate: float) -> dict:
         "time_chart": oos["time_vol_spike"].to_numpy(),      # 5-min volume spike on a time chart
         "vpin": oos["vpin"].to_numpy(),
         "volume_bars": -oos["log_pace"].to_numpy(),           # faster fill = higher score
+        "recent_volatility": oos["recent_range"].to_numpy(),  # last 30 min range vs normal
         "volumelens": oos["prob"].to_numpy(),
     }
     out = {"rows": int(len(oos)), "big_moves": int(y.sum()), "base_rate": float(y.mean()),
@@ -177,6 +182,8 @@ def _kind(r) -> str:
 def _reason(f: str, r) -> str:
     if f == "vol_spike_log":
         return f"last 5 min volume {r['time_vol_spike']:.1f}x normal"
+    if f == "recent_range_log":
+        return f"last 30 min range {r['recent_range']:.1f}x normal"
     if f == "open_hour":
         return "opening hour, the most volatile part of the day"
     if f == "log_ratio":

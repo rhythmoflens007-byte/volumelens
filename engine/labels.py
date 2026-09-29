@@ -7,9 +7,16 @@ from . import config as C
 
 
 def add_labels(bars: pd.DataFrame, sess: pd.DataFrame) -> pd.DataFrame:
-    """big_move = the price range over the 30 minutes after a bar closes is more than
-    2x the normal 30-minute range (normal = median of the previous ~4 days of 30-minute ranges).
-    Bars whose 30-minute window runs past the session end get no label."""
+    """Decision time for a bar = the end of the minute in which it completed (1-minute data
+    only reveals a minute's volume and close once that minute is over).
+
+    big_move = the price range over the next 30 full minutes after that decision time is
+    more than 2x the normal 30-minute range (median of the previous ~4 days of 30-minute
+    ranges). Bars whose window runs past the session end get no label.
+
+    Also adds two comparison signals known at decision time:
+      time_vol_spike - last 5 minutes' volume vs normal (what a time chart shows)
+      recent_range   - last 30 minutes' price range vs normal (recent volatility)"""
     b = bars.copy()
     m = sess
     hor = C.LABEL_HORIZON_MIN
@@ -26,27 +33,30 @@ def add_labels(bars: pd.DataFrame, sess: pd.DataFrame) -> pd.DataFrame:
     vol5 = m.groupby("date")["volume"].transform(lambda s: s.rolling(5, min_periods=5).sum())
     m["vol5_ratio"] = vol5 / vol5.shift(1).rolling(C.LABEL_NORMAL_MINUTES, min_periods=300).median()
 
-    fwd, normal, spike = [], [], []
+    fwd, normal, spike, recent = [], [], [], []
     by_date = {d: g for d, g in m.groupby("date")}
     for date, end in zip(b["date"], b["end"]):
         day = by_date[date]
         t = day["epoch"].to_numpy()
-        i = np.searchsorted(t, end, side="right") - 1           # minute the bar closed in
+        i = np.searchsorted(t, end - 1e-6, side="right") - 1    # minute the bar completed in
         if i < 0:
-            fwd.append(np.nan); normal.append(np.nan); spike.append(np.nan)
+            fwd.append(np.nan); normal.append(np.nan); spike.append(np.nan); recent.append(np.nan)
             continue
-        normal.append(day["normal_rng"].iat[i])
+        nr = day["normal_rng"].iat[i]
+        normal.append(nr)
         spike.append(day["vol5_ratio"].iat[i])
-        last_needed = end + hor * 60
-        if t[-1] + 60 < last_needed:                            # window runs past the day
+        recent.append(day["back_rng"].iat[i] / nr if nr else np.nan)
+        decided = t[i] + 60                                     # end of that minute
+        if t[-1] + 60 < decided + hor * 60:                     # window runs past the day
             fwd.append(np.nan)
             continue
-        win = day[(day["epoch"] + 60 > end) & (day["epoch"] < last_needed)]
-        fwd.append((win["high"].max() - win["low"].min()) / win["close"].iat[0])
+        win = day[(day["epoch"] >= decided) & (day["epoch"] < decided + hor * 60)]
+        fwd.append((win["high"].max() - win["low"].min()) / day["close"].iat[i])
 
     b["fwd_range"] = fwd
     b["normal_range"] = normal
     b["time_vol_spike"] = spike
+    b["recent_range"] = recent
     valid = b["fwd_range"].notna() & b["normal_range"].notna()
     b["big_move"] = np.where(valid, (b["fwd_range"] > C.LABEL_MULTIPLIER * b["normal_range"]).astype(float), np.nan)
     return b

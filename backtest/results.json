@@ -1,0 +1,273 @@
+{
+ "rows": 3804,
+ "big_moves": 447,
+ "base_rate": 0.11750788643533124,
+ "test_days": 20,
+ "stocks": [
+  "NARMADA",
+  "PNB",
+  "RELIANCE",
+  "SBIN",
+  "TECHM",
+  "YESBANK"
+ ],
+ "auc": {
+  "time_volume_spike": 0.7199183118721013,
+  "recent_volatility": 0.7709181872488324,
+  "vpin": 0.6574651882597772,
+  "fill_pace": 0.6683541250044067,
+  "time_chart_model": 0.746827058088911,
+  "volumelens": 0.7784835053669283,
+  "volume_clock_model": 0.6776730848559123
+ },
+ "alert_rate": 0.20130612244897958,
+ "at_same_alert_rate": {
+  "time_volume_spike": {
+   "caught": 0.42953020134228187,
+   "precision": 0.2532981530343008
+  },
+  "recent_volatility": {
+   "caught": 0.45861297539149887,
+   "precision": 0.3023598820058997
+  },
+  "vpin": {
+   "caught": 0.4563758389261745,
+   "precision": 0.27019867549668874
+  },
+  "fill_pace": {
+   "caught": 0.3713646532438479,
+   "precision": 0.21842105263157896
+  },
+  "time_chart_model": {
+   "caught": 0.40492170022371365,
+   "precision": 0.21095571095571095
+  },
+  "volumelens": {
+   "caught": 0.5145413870246085,
+   "precision": 0.3002610966057441
+  },
+  "volume_clock_model": {
+   "caught": 0.41834451901565994,
+   "precision": 0.19418483904465214
+  }
+ },
+ "per_stock": {
+  "NARMADA": {
+   "vpin": 0.6084995251661919,
+   "time_chart_model": 0.7269553072625698,
+   "volumelens": 0.7250598563447725
+  },
+  "PNB": {
+   "vpin": 0.4235023041474654,
+   "time_chart_model": 0.5978652263374485,
+   "volumelens": 0.4975565843621399
+  },
+  "RELIANCE": {
+   "vpin": 0.4909880798506391,
+   "time_chart_model": 0.7463647134855665,
+   "volumelens": 0.7361230791325578
+  },
+  "SBIN": {
+   "vpin": 0.7691928324839717,
+   "time_chart_model": 0.7236906997066891,
+   "volumelens": 0.8295119271135261
+  },
+  "TECHM": {
+   "vpin": 0.627616718506383,
+   "time_chart_model": 0.7110588756717399,
+   "volumelens": 0.7303187153247699
+  },
+  "YESBANK": {
+   "vpin": 0.705,
+   "time_chart_model": 0.8979260369815092,
+   "volumelens": 0.8478260869565217
+  }
+ },
+ "bootstrap": {
+  "auc_ci": {
+   "time_volume_spike": [
+    0.6268879991722955,
+    0.7781308013038294
+   ],
+   "recent_volatility": [
+    0.6772908684693071,
+    0.8387589018122461
+   ],
+   "vpin": [
+    0.5173190064416859,
+    0.766022558749322
+   ],
+   "fill_pace": [
+    0.5776972932257918,
+    0.7252226021767108
+   ],
+   "time_chart_model": [
+    0.6621513199842466,
+    0.8225680252768954
+   ],
+   "volumelens": [
+    0.7020129934868884,
+    0.8351985986286641
+   ],
+   "volume_clock_model": [
+    0.5835806802705866,
+    0.7487693100239675
+   ]
+  },
+  "diff": {
+   "volumelens - recent_volatility": {
+    "mean": 0.007134600103907942,
+    "ci": [
+     -0.040734705590203715,
+     0.06150188635147617
+    ],
+    "share_above_zero": 0.589
+   },
+   "volumelens - time_chart_model": {
+    "mean": 0.02874961016508774,
+    "ci": [
+     -0.010064572835255074,
+     0.07411413196828552
+    ],
+    "share_above_zero": 0.917
+   },
+   "volumelens - vpin": {
+    "mean": 0.12130986397862568,
+    "ci": [
+     0.030384241709293155,
+     0.2226762557352857
+    ],
+    "share_above_zero": 0.998
+   },
+   "volumelens - time_volume_spike": {
+    "mean": 0.05900132373801586,
+    "ci": [
+     0.01353612264216157,
+     0.12451320010959503
+    ],
+    "share_above_zero": 0.999
+   },
+   "fill_pace - vpin": {
+    "mean": 0.00887395887149089,
+    "ci": [
+     -0.08538461650062444,
+     0.09891025714754244
+    ],
+    "share_above_zero": 0.593
+   },
+   "volume_clock_model - time_chart_model": {
+    "mean": -0.07471158035270412,
+    "ci": [
+     -0.1831558954038448,
+     0.016186846325227554
+    ],
+    "share_above_zero": 0.074
+   }
+  }
+ },
+ "urgency": {
+  "all_day": {
+   "fast": {
+    "bars": 677.0,
+    "next30_range_x_normal": 1.24636399331257,
+    "big_move_rate": 0.19940915805022155
+   },
+   "normal": {
+    "bars": 3365.0,
+    "next30_range_x_normal": 1.0321287473855358,
+    "big_move_rate": 0.07696879643387816
+   },
+   "watch": {
+    "bars": 679.0,
+    "next30_range_x_normal": 1.1868299441174308,
+    "big_move_rate": 0.12812960235640647
+   }
+  },
+  "after_10_30": {
+   "fast": {
+    "bars": 531.0,
+    "next30_range_x_normal": 1.2041315921993596,
+    "big_move_rate": 0.192090395480226
+   },
+   "normal": {
+    "bars": 2623.0,
+    "next30_range_x_normal": 0.9634465139882302,
+    "big_move_rate": 0.04765535646206634
+   },
+   "watch": {
+    "bars": 520.0,
+    "next30_range_x_normal": 1.1153979937852307,
+    "big_move_rate": 0.08846153846153847
+   }
+  },
+  "shuffle": {
+   "real_auc": 0.6353858729560635,
+   "shuffled_mean": 0.5674721978542516,
+   "shuffled_max": 0.5956510392432157
+  }
+ },
+ "direction": {
+  "zones": 113,
+  "continued": 0.5398230088495575,
+  "chance_range": [
+   0.4078093548984075,
+   0.5921906451015926
+  ]
+ },
+ "stability": {
+  "fast_threshold": {
+   "fast<0.30": {
+    "urgent_share": 0.1012497352255878,
+    "big_move_after_urgent": 0.2175732217573222,
+    "big_move_after_other": 0.08885222719773744,
+    "lift": 2.448708700043284
+   },
+   "fast<0.35": {
+    "urgent_share": 0.12116077102308832,
+    "big_move_after_urgent": 0.19755244755244755,
+    "big_move_after_other": 0.08869607134249216,
+    "lift": 2.22729648069322
+   },
+   "fast<0.40": {
+    "urgent_share": 0.14340182164795595,
+    "big_move_after_urgent": 0.19940915805022155,
+    "big_move_after_other": 0.08555885262116716,
+    "lift": 2.3306665755927627
+   },
+   "fast<0.45": {
+    "urgent_share": 0.16500741368354163,
+    "big_move_after_urgent": 0.196405648267009,
+    "big_move_after_other": 0.08320649416539827,
+    "lift": 2.3604605654528945
+   },
+   "fast<0.50": {
+    "urgent_share": 0.1870366447786486,
+    "big_move_after_urgent": 0.18459796149490373,
+    "big_move_after_other": 0.08285565398645128,
+    "lift": 2.2279464660925803
+   }
+  },
+  "bars_per_day": {
+   "50 bars/day": {
+    "fill_pace": 0.6880092693864158,
+    "vpin": 0.6993672386440307,
+    "time_chart_model": 0.7744002860934133,
+    "volumelens": 0.7600940469356321
+   },
+   "75 bars/day": {
+    "fill_pace": 0.6683541250044067,
+    "vpin": 0.6574651882597772,
+    "time_chart_model": 0.746827058088911,
+    "volumelens": 0.7784835053669283
+   },
+   "100 bars/day": {
+    "fill_pace": 0.6568823748088022,
+    "vpin": 0.6767967161906556,
+    "time_chart_model": 0.7485843152319057,
+    "volumelens": 0.766351630375337
+   }
+  },
+  "pace_auc": 0.6353858729560635
+ },
+ "seconds": 15.0
+}
