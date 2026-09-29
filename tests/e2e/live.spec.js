@@ -20,7 +20,7 @@ const liveState = (page) => page.evaluate(() => {
 
 test('live: streams today, matches the server, follows the newest candle and never repaints', async ({ page, request }) => {
   await page.goto(`/?debug&live=${LIVE}#RELIANCE`);
-  await expect(page.locator('#live-badge')).toHaveText(/SIMULATED \d\d:\d\d:\d\d/, { timeout: 20_000 });
+  await expect(page.locator('#live-badge')).toHaveText(/REPLAY · market time \d\d:\d\d/, { timeout: 20_000 });   // a replay never claims to be live
   await page.waitForFunction(() => window.vl?.state.series?.sessions.at(-1).live);
 
   const first = await liveState(page);

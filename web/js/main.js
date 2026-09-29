@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=42';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=42';
-import { loadIndex, Series } from './data.js?v=42';
-import { createTools } from './tools.js?v=42';
-import { SessionSeparators, CompareBands, ClockOverlay } from './overlays.js?v=42';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=43';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=43';
+import { loadIndex, Series } from './data.js?v=43';
+import { createTools } from './tools.js?v=43';
+import { SessionSeparators, CompareBands, ClockOverlay } from './overlays.js?v=43';
 
 const LWC = window.LightweightCharts;
 
@@ -369,6 +369,21 @@ async function liveConfig() {
   catch (e) { return ''; }
 }
 
+/** NSE cash market: Monday–Friday, 09:15–15:30 IST (exchange holidays are not known here). */
+function marketOpen(now = new Date()) {
+  const ist = new Date(now.getTime() + (330 + now.getTimezoneOffset()) * 60000);
+  const m = ist.getHours() * 60 + ist.getMinutes(), d = ist.getDay();
+  return d >= 1 && d <= 5 && m >= 555 && m < 930;
+}
+
+/** Badge text: LIVE only while the market is open; a replay always says REPLAY with its market time. */
+function showLiveState(mode, lastMinute) {
+  const at = lastMinute ? ` ${hhmm(lastMinute)}` : '';
+  if (mode === 'simulated') setLiveBadge('sim', lastMinute ? `REPLAY · market time${at}` : 'REPLAY · connected');
+  else if (marketOpen()) setLiveBadge('on', lastMinute ? `LIVE${at}` : 'LIVE · waiting for 09:30');
+  else setLiveBadge('off', `MARKET CLOSED${lastMinute ? ` · last${at}` : ''}`);
+}
+
 function setLiveBadge(kind, text) {
   const el = $('live-badge');
   el.hidden = !kind;
@@ -387,8 +402,8 @@ function connectLive(symbol) {
   src.onopen = async () => {                // connected: say so before the first candle arrives (candles start at 09:30)
     let mode = 'live';
     try { mode = (await (await fetch(`${live.url}/status`, { cache: 'no-store' })).json()).mode; } catch (e) { /* keep default */ }
-    if (live.source !== src || /\d\d:\d\d:\d\d/.test($('live-badge').textContent)) return;
-    setLiveBadge(mode === 'live' ? 'on' : 'sim', `${mode === 'live' ? 'LIVE' : 'SIMULATED'} · connected`);
+    if (live.source !== src || /\d\d:\d\d/.test($('live-badge').textContent)) return;
+    showLiveState(mode, null);
   };
   src.onmessage = (e) => { try { onLive(JSON.parse(e.data)); } catch (err) { /* ignore a malformed frame */ } };
   src.onerror = () => {
@@ -400,8 +415,7 @@ function connectLive(symbol) {
 
 function onLive(p) {
   if (p.symbol !== state.symbol || !state.series || !p.bars?.standard?.length) return;
-  const mode = p.live?.mode;
-  setLiveBadge(mode === 'live' ? 'on' : 'sim', `${mode === 'live' ? 'LIVE' : 'SIMULATED'} ${p.live?.updated || ''}`.trim());
+  showLiveState(p.live?.mode, p.minutes.at(-1)?.[0]);
   const stock = state.index.stocks.find((s) => s.symbol === p.symbol);
   const lastMin = p.minutes.at(-1);
   if (stock && lastMin && p.live) {
