@@ -38,7 +38,16 @@ export function lastAtOrBefore(arr, x, key) {
 export const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 export const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-export const level = (u) => (u == null ? ['–', ''] : u >= URGENT_INDEX ? ['Urgent', 'urgent'] : u >= WATCH_INDEX ? ['Watch', 'watch'] : ['Normal', '']);
+/** Urgency thresholds in use (chart settings can move them; the backtest uses the defaults). */
+export const TH = { urgent: URGENT_INDEX, watch: WATCH_INDEX };
+export const level = (u) => (u == null ? ['–', ''] : u >= TH.urgent ? ['Urgent', 'urgent'] : u >= TH.watch ? ['Watch', 'watch'] : ['Normal', '']);
+
+/** Blend two #rrggbb colours, f in [0, 1]. */
+export function mix(a, b, f) {
+  const p = (h, i) => parseInt(h.slice(i, i + 2), 16);
+  const c = [1, 3, 5].map((i) => Math.round(p(a, i) + (p(b, i) - p(a, i)) * Math.max(0, Math.min(1, f))));
+  return `#${c.map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+}
 
 export function store(key, value) {
   try {

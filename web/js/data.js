@@ -1,7 +1,7 @@
 // Loading market data. index.json lists every stock and session; each session is its own file,
 // so a stock opens fast (latest sessions first) and earlier history streams in behind it.
 
-import { B } from './util.js?v=39';
+import { B } from './util.js?v=41';
 
 const cache = new Map();
 

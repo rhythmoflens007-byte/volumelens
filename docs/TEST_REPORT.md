@@ -4,7 +4,7 @@ Run everything with:
 
 ```bash
 .venv/Scripts/python -m pytest -q        # engine and live server: 16 tests
-npx playwright test                      # terminal: 19 checks x 2 browsers (starts a simulated live server)
+npx playwright test                      # terminal: 20 checks x 2 browsers (starts a simulated live server)
 .venv/Scripts/python backtest.py         # validation: backtest/report.md
 ```
 
@@ -28,7 +28,7 @@ npx playwright test                      # terminal: 19 checks x 2 browsers (sta
 | **live equals batch** (RELIANCE, SBIN) | feeding 29 Sep minute by minute through the live server gives exactly the candles and indicators of the batch pipeline, for all three densities |
 | **live never repaints** | recomputing after every minute never changes a candle that was already published |
 
-## Terminal (Playwright): 38 passed (19 checks × Microsoft Edge and Google Chrome)
+## Terminal (Playwright): 40 passed (20 checks × Microsoft Edge and Google Chrome)
 
 Every check fails on any uncaught page error or console error.
 
@@ -43,6 +43,7 @@ Every check fails on any uncaught page error or console error.
 | Replay | no candle or alert from the future is shown; stepping works; exit restores the view |
 | Unfold | clicking a time candle reveals the volume candles inside it |
 | Layers, theme, scanner, sessions | optional panes add and remove; light/dark; scanner and session list navigate |
+| **Chart settings** | urgency-heat colouring, a stricter threshold flags fewer candles and re-classifies exactly by Urgency Index, pace ribbon, band length, log scale, density; all remembered after reload; Reset restores the engine's classes exactly |
 | Snapshot | downloads a PNG |
 | Data failure | a failed data request shows a clear message; Try again recovers |
 | Layouts | 1920×1080, 1366×768 and 1024×768 in dark and light: no horizontal overflow, legends inside the chart |

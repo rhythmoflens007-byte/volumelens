@@ -20,6 +20,8 @@ on all 11 stocks. It ties a well-built time-chart model. Urgency does not predic
 | | |
 |---|---|
 | **Volume candles** | One candle per fixed number of shares, sized per stock from its previous 20 sessions. Amber candles are urgent: the last 3 filled in under 40% of their normal time. |
+| **Volume clock made visible** | Time bands shade every other 15/30/60 minutes of clock time: a quiet half hour is a thin band, an urgent one a wide band full of candles, with its candle count. A pace ribbon and ×N marks (one minute that alone filled N candles) are optional. |
+| **Chart settings** | Gear or `,`: candle size, colour by direction + urgent / urgency heat / direction, urgency thresholds, clock overlays, normal / log / percent scale, panes. Remembered per browser. |
 | **Fill-time strip** | How long each candle took to fill, the normal fill time for that moment, and VPIN. |
 | **Compare chart** | A normal 1/3/5/15/30-minute chart for comparison, built in the browser from 1-minute data, with urgent minutes shaded. |
 | **Unfold** | Click a time candle: the main chart glides to the volume candles that formed inside it ("the 5-minute candle 15:05–15:10 unfolds into 22 volume candles, 22 urgent"). |
@@ -87,7 +89,7 @@ then open <http://localhost:8765/?live=http://localhost:8787>, or put the server
 
 ```bash
 .venv/Scripts/python -m pytest -q      # 16 tests: engine, no-repaint, quality gate, live = batch
-npm install && npx playwright test     # 38 browser checks in Edge and Chrome
+npm install && npx playwright test     # 40 browser checks in Edge and Chrome
 .venv/Scripts/python backtest.py       # walk-forward validation with bootstrap intervals
 ```
 

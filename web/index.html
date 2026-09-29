@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%23565b66'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%23565b66'/%3E%3C/svg%3E">
 <link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=39">
+<link rel="stylesheet" href="css/app.css?v=41">
 </head>
 <body>
 <header class="toolbar">
@@ -39,6 +39,7 @@
       <label><input type="checkbox" data-layer="hollow"> Hollow candles</label>
     </div>
   </details>
+  <button id="settings-btn" class="btn icon-text" title="Chart settings (,)"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v1.6M8 12.6v1.6M1.8 8h1.6M12.6 8h1.6M3.6 3.6l1.1 1.1M11.3 11.3l1.1 1.1M3.6 12.4l1.1-1.1M11.3 4.7l1.1-1.1"/></svg><span>Settings</span></button>
   <button id="theme-btn" class="btn" title="Switch theme">Light</button>
   <button id="help-btn" class="btn" title="How to read VolumeLens (?)">Help</button>
 </header>
@@ -142,6 +143,66 @@
   <a href="https://www.tradingview.com/" target="_blank" rel="noopener">Charting by TradingView Lightweight Charts™</a>
 </footer>
 
+<dialog id="settings" class="settings" aria-labelledby="settings-title">
+  <form method="dialog" class="settings-form">
+    <header class="settings-head"><h2 id="settings-title">Chart settings</h2><button class="icon-btn" value="close" aria-label="Close">✕</button></header>
+    <div class="settings-body">
+      <nav class="settings-tabs" role="tablist" aria-label="Settings sections">
+        <button type="button" role="tab" data-tab="candles" class="on">Candles</button>
+        <button type="button" role="tab" data-tab="style">Style</button>
+        <button type="button" role="tab" data-tab="urgency">Urgency</button>
+        <button type="button" role="tab" data-tab="clock">Clock</button>
+        <button type="button" role="tab" data-tab="scales">Scales</button>
+        <button type="button" role="tab" data-tab="panes">Panes</button>
+      </nav>
+      <div class="settings-panels">
+        <section data-panel="candles">
+          <h3>Candle size</h3>
+          <p class="note" id="set-size-note"></p>
+          <label class="opt"><input type="radio" name="density" value="fine"><span><b>Fine</b> · about 150 candles in a normal session</span></label>
+          <label class="opt"><input type="radio" name="density" value="standard"><span><b>Standard</b> · about 75 candles (used by the backtest)</span></label>
+          <label class="opt"><input type="radio" name="density" value="coarse"><span><b>Coarse</b> · about 40 candles</span></label>
+          <h3>Body</h3>
+          <label class="opt"><input type="checkbox" data-layer="hollow"><span>Hollow up candles</span></label>
+        </section>
+        <section data-panel="style" hidden>
+          <h3>Colour candles by</h3>
+          <label class="opt"><input type="radio" name="colorBy" data-set="colorBy" value="both"><span><i class="sw" style="--a:#1fa37a;--b:#ff9800;--c:#e5484d"></i><b>Direction + urgent</b> · green and red, urgent candles amber</span></label>
+          <label class="opt"><input type="radio" name="colorBy" data-set="colorBy" value="heat"><span><i class="sw" style="--a:#4a505d;--b:#ff9800;--c:#ff5a1f"></i><b>Urgency heat</b> · grey when calm, amber to orange as urgency rises; up candles hollow</span></label>
+          <label class="opt"><input type="radio" name="colorBy" data-set="colorBy" value="direction"><span><i class="sw" style="--a:#1fa37a;--b:#1fa37a;--c:#e5484d"></i><b>Direction only</b> · green and red</span></label>
+        </section>
+        <section data-panel="urgency" hidden>
+          <h3>Thresholds (Urgency Index 0–100)</h3>
+          <label class="row">Urgent from <input type="range" min="40" max="90" step="5" data-set="urgent"><output id="out-urgent"></output></label>
+          <label class="row">Watch from <input type="range" min="10" max="60" step="5" data-set="watch"><output id="out-watch"></output></label>
+          <p class="note">Urgency Index = (1 − pace) × 100, where pace is the fill time of the last 3 candles against normal. 60 means they filled 2.5× faster than normal. Backtest figures use the defaults, 60 and 30.</p>
+        </section>
+        <section data-panel="clock" hidden>
+          <h3>Make the volume clock visible</h3>
+          <label class="opt"><input type="checkbox" data-set="bands"><span><b>Time bands</b> · shade every other stretch of clock time; wide bands are busy, thin bands are quiet</span></label>
+          <label class="row">Band length <select data-set="bandMin" aria-label="Band length"><option value="15">15 min</option><option value="30">30 min</option><option value="60">60 min</option></select></label>
+          <label class="opt"><input type="checkbox" data-set="ribbon"><span><b>Pace ribbon</b> · heat strip of the Urgency Index along the bottom of the chart</span></label>
+          <label class="opt"><input type="checkbox" data-set="badges"><span><b>Wide-candle marks</b> · ×N when one minute alone filled N candles</span></label>
+        </section>
+        <section data-panel="scales" hidden>
+          <h3>Price scale</h3>
+          <label class="opt"><input type="radio" name="scale" data-set="scale" value="normal"><span>Normal</span></label>
+          <label class="opt"><input type="radio" name="scale" data-set="scale" value="log"><span>Logarithmic</span></label>
+          <label class="opt"><input type="radio" name="scale" data-set="scale" value="percent"><span>Percent from the first candle in view</span></label>
+        </section>
+        <section data-panel="panes" hidden>
+          <h3>Panes and overlays</h3>
+          <label class="opt"><input type="checkbox" data-layer="compare"><span>Compare time chart</span></label>
+          <label class="opt"><input type="checkbox" data-layer="shade"><span>Urgency on compare chart</span></label>
+          <label class="opt"><input type="checkbox" data-layer="fill"><span>Fill time &amp; VPIN pane</span></label>
+          <label class="opt"><input type="checkbox" data-layer="aai"><span>Absorption pane</span></label>
+        </section>
+      </div>
+    </div>
+    <footer class="settings-foot"><button type="button" class="btn" id="settings-reset">Reset to defaults</button><button class="btn primary" value="done">Done</button></footer>
+  </form>
+</dialog>
+
 <dialog id="help">
   <h2>Reading VolumeLens</h2>
   <dl>
@@ -162,6 +223,6 @@
 </dialog>
 
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
-<script type="module" src="js/main.js?v=39"></script>
+<script type="module" src="js/main.js?v=41"></script>
 </body>
 </html>

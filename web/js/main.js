@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level } from './util.js?v=39';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=39';
-import { loadIndex, Series } from './data.js?v=39';
-import { createTools } from './tools.js?v=39';
-import { SessionSeparators, CompareBands } from './overlays.js?v=39';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=41';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=41';
+import { loadIndex, Series } from './data.js?v=41';
+import { createTools } from './tools.js?v=41';
+import { SessionSeparators, CompareBands, ClockOverlay } from './overlays.js?v=41';
 
 const LWC = window.LightweightCharts;
 
@@ -25,6 +25,7 @@ const THEMES = {
     volUp: 'rgba(31,163,122,0.28)', volDown: 'rgba(229,72,77,0.28)', shade: 'rgba(255,152,0,0.11)', hover: 'rgba(76,125,255,0.16)',
     cross: '#5b6270', label: '#2a303c', draw: '#e3e6ec', zoneFill: 'rgba(76,125,255,0.10)', zoneLine: 'rgba(76,125,255,0.6)',
     separator: 'rgba(139,146,160,0.28)', chip: 'rgba(23,27,36,0.9)', chipText: '#9aa1ae', watermark: 'rgba(139,146,160,0.07)',
+    band: 'rgba(139,146,160,0.055)', bandText: 'rgba(139,146,160,0.55)', calm: '#4a505d', hot: '#ff5a1f',
   },
   light: {
     bg: '#f6f7f9', text: '#5b6270', grid: '#eceff3', line: '#e2e5ea', neutral: '#c9ced6', smooth: '#11141b',
@@ -32,9 +33,11 @@ const THEMES = {
     volUp: 'rgba(15,138,99,0.22)', volDown: 'rgba(217,48,54,0.22)', shade: 'rgba(224,124,0,0.12)', hover: 'rgba(47,95,224,0.14)',
     cross: '#8a909c', label: '#5b6270', draw: '#11141b', zoneFill: 'rgba(47,95,224,0.08)', zoneLine: 'rgba(47,95,224,0.55)',
     separator: 'rgba(91,98,112,0.3)', chip: 'rgba(255,255,255,0.92)', chipText: '#4b5260', watermark: 'rgba(91,98,112,0.07)',
+    band: 'rgba(91,98,112,0.06)', bandText: 'rgba(91,98,112,0.7)', calm: '#aab0ba', hot: '#d84315',
   },
 };
 const DENSITY_LABEL = { fine: 'Fine', standard: 'Standard', coarse: 'Coarse' };
+const DEFAULT_SETTINGS = { colorBy: 'both', bands: true, bandMin: 30, ribbon: false, badges: true, scale: 'normal', urgent: 60, watch: 30 };
 
 const state = {
   index: null, symbol: null, series: null,
@@ -47,7 +50,9 @@ const state = {
   candles: [], upto: 0, cursor: null, burst: null,
   replay: null, playing: false, timer: null,
   crosshairLock: false, loadingEarlier: false,
+  settings: Object.assign({}, DEFAULT_SETTINGS, store('vl:settings') || {}),
 };
+TH.urgent = state.settings.urgent; TH.watch = state.settings.watch;
 const th = () => THEMES[state.theme];
 const span = () => state.tf * 60;
 const bars = () => state.view.bars;
@@ -72,10 +77,20 @@ function chartOptions() {
   };
 }
 const candleOptions = () => ({ upColor: th().up, downColor: th().down, wickUpColor: th().up, wickDownColor: th().down,
-  borderVisible: state.layers.hollow, borderUpColor: th().up, borderDownColor: th().down });
+  borderVisible: state.layers.hollow || state.settings.colorBy === 'heat', borderUpColor: th().up, borderDownColor: th().down });
+
+/** Urgency heat: calm grey, then watch amber, then urgent orange, hotter towards 100. */
+function heat(u, ribbon = false) {
+  const t = th();
+  if (u == null || u < TH.watch) return ribbon ? t.grid : t.calm;
+  if (u < TH.urgent) return mix(t.watch, t.accent, (u - TH.watch) / Math.max(1, TH.urgent - TH.watch));
+  return mix(t.accent, t.hot, (u - TH.urgent) / Math.max(1, 100 - TH.urgent));
+}
 
 const volChart = LWC.createChart($('vol-chart'), chartOptions());
 const vCandles = volChart.addSeries(LWC.CandlestickSeries, candleOptions(), 0);
+const clock = new ClockOverlay(th);
+vCandles.attachPrimitive(clock);                // first, so session labels paint over it
 const vUrg = volChart.addSeries(LWC.HistogramSeries, {
   priceLineVisible: false, lastValueVisible: false, base: 0,
   priceFormat: { type: 'custom', formatter: (v) => v.toFixed(0), minMove: 1 },
@@ -110,8 +125,8 @@ function styleUrgency() {
   const t = th();
   for (const l of urgLines) vUrg.removePriceLine(l);
   urgLines = [
-    vUrg.createPriceLine({ price: URGENT_INDEX, color: t.accent, lineWidth: 1, lineStyle: LWC.LineStyle.Dashed, axisLabelVisible: true, title: 'Urgent' }),
-    vUrg.createPriceLine({ price: WATCH_INDEX, color: t.text, lineWidth: 1, lineStyle: LWC.LineStyle.Dotted, axisLabelVisible: true, title: 'Watch' }),
+    vUrg.createPriceLine({ price: TH.urgent, color: t.accent, lineWidth: 1, lineStyle: LWC.LineStyle.Dashed, axisLabelVisible: true, title: 'Urgent' }),
+    vUrg.createPriceLine({ price: TH.watch, color: t.text, lineWidth: 1, lineStyle: LWC.LineStyle.Dotted, axisLabelVisible: true, title: 'Watch' }),
   ];
 }
 
@@ -172,14 +187,15 @@ function applyTheme() {
 
 // ================================================================ points for series
 function candlePoint(r) {
-  const t = th();
-  const col = r[B.SPEED] === URGENT ? t.accent : r[B.C] >= r[B.O] ? t.up : t.down;
-  const hollowUp = state.layers.hollow && r[B.C] >= r[B.O] && r[B.SPEED] !== URGENT;
+  const t = th(), by = state.settings.colorBy, up = r[B.C] >= r[B.O];
+  let col = up ? t.up : t.down, hollowUp = state.layers.hollow && up;
+  if (by === 'heat') { col = heat(r[B.UIDX]); hollowUp = up; }          // direction shown by hollow (up) vs filled (down)
+  else if (by === 'both' && r[B.SPEED] === URGENT) { col = t.accent; hollowUp = false; }
   return { time: r[B.T], open: r[B.O], high: r[B.H], low: r[B.L], close: r[B.C], color: hollowUp ? 'rgba(0,0,0,0)' : col, borderColor: col, wickColor: col };
 }
 function urgencyPoint(r) {
   const t = th(), u = r[B.UIDX];
-  return u == null ? { time: r[B.T] } : { time: r[B.T], value: Math.max(1, u), color: u >= URGENT_INDEX ? t.accent : u >= WATCH_INDEX ? t.watch : t.neutral };
+  return u == null ? { time: r[B.T] } : { time: r[B.T], value: Math.max(1, u), color: u >= TH.urgent ? t.accent : u >= TH.watch ? t.watch : t.neutral };
 }
 function optionalPoints(r) {
   const t = th(), out = {};
@@ -211,6 +227,7 @@ function draw() {
   }
   drawCompare();
   drawMarkers();
+  setClock();
   const starts = state.view.starts.filter((s) => s.index < state.upto).map((s) => ({ ...s, score: sessionMeta(s.date)?.urgency_score }));
   separators.set(starts);
   urgSeparators.set(starts);
@@ -256,7 +273,13 @@ function appendBar(k) {
     tVol.update(volPointT(state.candles[j]));
   }
   shadeCompare();
+  setClock();
   if (state.view.alerts.some((a) => a.i === k)) drawMarkers();
+}
+
+function setClock() {
+  const b = bars(), st = state.view.starts;
+  clock.set(b, state.upto, state.settings, (k) => st[b[k][B.SESSION]]?.size, heat);
 }
 
 // ================================================================ loading
@@ -292,10 +315,18 @@ async function openStock(symbol, date = null) {
 function rebuild(keep = null) {
   state.rebuilding = true;                   // no history loading while the view is being rebuilt
   state.view = state.series.build(state.density);
+  applyThresholds();
   state.upto = bars().length;
   draw();
   if (keep) restoreTimeRange(keep);
   setTimeout(() => { state.rebuilding = false; }, 250);
+}
+
+/** Custom thresholds re-classify candles from their Urgency Index; the defaults keep the engine's classes. */
+function applyThresholds() {
+  const s = state.settings;
+  if (s.urgent === DEFAULT_SETTINGS.urgent && s.watch === DEFAULT_SETTINGS.watch) return;
+  for (const r of bars()) { const u = r[B.UIDX]; r[B.SPEED] = u == null ? 0 : u >= TH.urgent ? URGENT : u >= TH.watch ? WATCH : 0; }
 }
 
 function visibleTimeRange() {
@@ -558,9 +589,10 @@ const showDetails = perFrame((barIdx, candleIdx) => {
   const start = state.view.starts[r[B.SESSION]];
   const cc = c && (c[4] >= c[1] ? 'up' : 'down'), rc = r[B.C] >= r[B.O] ? 'up' : 'down';
   const [lv, lcls] = level(r[B.UIDX]);
-  $('legend-vol').innerHTML = `<span class="title">${state.symbol} · Volume candles · ${DENSITY_LABEL[state.density]}</span>` +
+  $('legend-vol').innerHTML = `<span class="title">${state.symbol} · Volume candles · 1 = ${shares(start.size)} sh</span>` +
     kv('O', fmt(r[B.O]), rc) + kv('H', fmt(r[B.H]), rc) + kv('L', fmt(r[B.L]), rc) + kv('C', fmt(r[B.C]), rc) +
-    kv('', `${shortDate(start.date)} ${hhmm(r[B.START])}–${hhmm(r[B.T])}`);
+    kv('', `${shortDate(start.date)} ${hhmm(r[B.START])}–${hhmm(r[B.T])}`) +
+    kv('filled in', `${fmt(r[B.FILL], 0)} min`) + (r[B.BASE] != null ? kv('normal', `${fmt(r[B.BASE], 1)} min`) : '');
   $('legend-urg').innerHTML = `<span class="title">Urgency Index</span>` + kv('', fmt(r[B.UIDX], 0), lcls) + kv('', lv, lcls);
   if (state.layers.fill) $('legend-fill').innerHTML = `<span class="title">Fill time</span>` + kv('', `${fmt(r[B.FILL], 1)}m`) + kv('normal', `${fmt(r[B.BASE], 1)}m`) + kv('VPIN', fmt(r[B.VPIN], 2), 'blue');
   if (state.layers.aai) $('legend-aai').innerHTML = `<span class="title">Absorption</span>` + kv('', fmt(r[B.AAIS], 2));
@@ -855,12 +887,16 @@ function segmented(id, items, current, onPick) {
     onPick(b.dataset.v);
   });
 }
-segmented('density', Object.keys(DENSITY_LABEL).map((k) => [k, DENSITY_LABEL[k]]), state.density, (v) => {
+segmented('density', Object.keys(DENSITY_LABEL).map((k) => [k, DENSITY_LABEL[k]]), state.density, (v) => setDensity(v));
+function setDensity(v) {
+  if (v === state.density) return;
   if (state.replay) exitReplay();
   const keep = visibleTimeRange();
   state.density = v; store('vl:density', v);
+  $('density').querySelectorAll('button').forEach((x) => { const on = x.dataset.v === v; x.classList.toggle('on', on); x.setAttribute('aria-pressed', on); });
   rebuild(keep); setWatermark(); fillSessions();
-});
+  syncSettingsForm();
+}
 segmented('tf', TIMEFRAMES.map((m) => [m, `${m}m`]), state.tf, (v) => {
   state.tf = Number(v); store('vl:tf', state.tf);
   drawCompare();
@@ -888,6 +924,60 @@ function applyLayers() {
 document.querySelectorAll('[data-layer]').forEach((c) => c.addEventListener('change', () => { state.layers[c.dataset.layer] = c.checked; applyLayers(); }));
 $('compare-close').addEventListener('click', () => { state.layers.compare = false; applyLayers(); });
 document.addEventListener('click', (e) => { const m = $('layers'); if (m.open && !m.contains(e.target)) m.open = false; });
+
+// chart settings (gear): one dialog, every change applies at once and is remembered in this browser
+const SCALE_MODE = { normal: LWC.PriceScaleMode.Normal, log: LWC.PriceScaleMode.Logarithmic, percent: LWC.PriceScaleMode.Percentage };
+function syncSettingsForm() {
+  const S = state.settings, f = $('settings');
+  f.querySelectorAll('[data-set]').forEach((el) => {
+    const v = S[el.dataset.set];
+    if (el.type === 'radio') el.checked = el.value === String(v);
+    else if (el.type === 'checkbox') el.checked = !!v;
+    else el.value = String(v);
+  });
+  f.querySelectorAll('input[name=density]').forEach((el) => { el.checked = el.value === state.density; });
+  f.querySelectorAll('[data-layer]').forEach((c) => { c.checked = !!state.layers[c.dataset.layer]; });
+  $('out-urgent').textContent = S.urgent;
+  $('out-watch').textContent = S.watch;
+  const size = state.view.starts.at(-1)?.size;
+  $('set-size-note').textContent = 'Adaptive: each candle holds a fixed number of shares, set per stock from its previous 20 sessions.' +
+    (size ? ` ${state.symbol} now: 1 candle = ${inr(size)} shares.` : '');
+}
+function applySettings(redraw = true) {
+  const S = state.settings;
+  if (S.watch >= S.urgent) S.watch = S.urgent - 5;
+  TH.urgent = S.urgent; TH.watch = S.watch;
+  store('vl:settings', S);
+  styleUrgency();
+  volChart.priceScale('right', 0).applyOptions({ mode: SCALE_MODE[S.scale] ?? LWC.PriceScaleMode.Normal });
+  vCandles.applyOptions(candleOptions());
+  syncSettingsForm();
+  if (!redraw || !state.symbol) return;
+  if (state.replay) { draw(); return; }
+  rebuild(visibleTimeRange());
+}
+$('settings').addEventListener('input', (e) => {
+  const el = e.target;
+  if (el.name === 'density') { setDensity(el.value); return; }
+  if (!el.dataset.set) return;
+  const k = el.dataset.set, S = state.settings;
+  S[k] = el.type === 'checkbox' ? el.checked : typeof DEFAULT_SETTINGS[k] === 'number' ? Number(el.value) : el.value;
+  applySettings(k !== 'scale');
+});
+document.querySelectorAll('.settings-tabs [data-tab]').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('.settings-tabs [data-tab]').forEach((x) => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
+  document.querySelectorAll('.settings-panels [data-panel]').forEach((p) => { p.hidden = p.dataset.panel !== b.dataset.tab; });
+}));
+$('settings-reset').addEventListener('click', () => {
+  state.settings = { ...DEFAULT_SETTINGS };
+  setDensity('standard');
+  Object.assign(state.layers, { compare: true, shade: true, fill: false, aai: false, hollow: false });
+  applyLayers();
+  applySettings();
+});
+function openSettings() { syncSettingsForm(); $('settings').showModal(); }
+$('settings-btn').addEventListener('click', openSettings);
+applySettings(false);
 
 // tools
 document.querySelectorAll('.tool[data-tool]').forEach((b) => b.addEventListener('click', () => tools.setTool(b.dataset.tool)));
@@ -936,7 +1026,7 @@ $('help-btn').addEventListener('click', () => $('help').showModal());
 // ================================================================ keyboard
 document.addEventListener('keydown', (e) => {
   const typing = e.target instanceof Element && e.target.matches('input:not([type=range]):not([type=checkbox]), select');
-  if (typing || $('help').open || !state.symbol) return;
+  if (typing || $('help').open || $('settings').open || !state.symbol) return;
   const k = e.key;
   if ((e.ctrlKey || e.metaKey) && k.toLowerCase() === 'z') { e.preventDefault(); tools.undo(); return; }
   if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -949,6 +1039,7 @@ document.addEventListener('keydown', (e) => {
     case 'r': case 'R': if (state.replay) exitReplay(); else enterReplay(); break;
     case 'l': case 'L': if (!state.replay) showLatest(); break;
     case '?': $('help').showModal(); break;
+    case ',': openSettings(); break;
     case ' ': if (state.replay) { e.preventDefault(); togglePlay(); } break;
     case 'ArrowRight': case 'ArrowLeft': {
       e.preventDefault();

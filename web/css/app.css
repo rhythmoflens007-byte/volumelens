@@ -369,3 +369,40 @@ dialog form .btn { border-color: var(--line); color: var(--text); }
   .statusbar #status-data, .statusbar .spacer { display: none; }
   .replay-bar { flex-wrap: wrap; row-gap: 6px; }
 }
+
+/* ---------- chart settings ---------- */
+.icon-text { display: inline-flex; align-items: center; gap: 6px; }
+.icon-text svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; }
+dialog.settings { max-width: 640px; padding: 0; }
+.settings-form { display: flex; flex-direction: column; max-height: min(640px, 90vh); text-align: left; margin: 0 !important; }
+.settings-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 12px; border-bottom: 1px solid var(--line); }
+.settings-head h2 { margin: 0; font-size: 16px; }
+.settings-head .icon-btn { border: 0; background: transparent; color: var(--text-2); font-size: 14px; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; }
+.settings-head .icon-btn:hover { background: var(--hover); color: var(--text); }
+.settings-body { display: grid; grid-template-columns: 150px 1fr; min-height: 340px; overflow: hidden; }
+.settings-tabs { display: flex; flex-direction: column; gap: 2px; padding: 12px 8px; border-right: 1px solid var(--line); }
+.settings-tabs button { text-align: left; border: 0; background: transparent; color: var(--text-2); padding: 8px 12px; border-radius: 7px; font: inherit; font-size: 13px; cursor: pointer; }
+.settings-tabs button:hover { background: var(--hover); color: var(--text); }
+.settings-tabs button.on { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+.settings-panels { padding: 8px 20px 16px; overflow: auto; }
+.settings-panels h3 { margin: 12px 0 8px; font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); }
+.settings-panels .opt { display: flex; gap: 10px; align-items: flex-start; padding: 7px 0; font-size: 13px; color: var(--text-2); cursor: pointer; }
+.settings-panels .opt b { color: var(--text); font-weight: 500; }
+.settings-panels .opt input { margin: 2px 0 0; accent-color: var(--accent); }
+.settings-panels .row { display: flex; align-items: center; gap: 12px; padding: 8px 0; font-size: 13px; color: var(--text-2); }
+.settings-panels .row input[type=range] { flex: 1; accent-color: var(--accent); }
+.settings-panels .row output { min-width: 28px; text-align: right; font-family: "JetBrains Mono", monospace; color: var(--text); }
+.settings-panels select { background: var(--bg); color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px; font: inherit; }
+.settings-panels .note { margin: 4px 0 8px; font-size: 12px; color: var(--text-3); line-height: 1.5; }
+.sw { display: inline-block; width: 30px; height: 12px; margin-right: 8px; vertical-align: -1px; border-radius: 3px;
+  background: linear-gradient(90deg, var(--a) 0 33%, var(--b) 33% 66%, var(--c) 66%); }
+.settings-foot { display: flex; justify-content: space-between; padding: 12px 20px; border-top: 1px solid var(--line); }
+.settings-foot .btn { border: 1px solid var(--line); color: var(--text); }
+.settings-foot .btn.primary { background: var(--accent); border-color: var(--accent); color: #111; font-weight: 600; }
+@media (max-width: 640px) {
+  .settings-body { grid-template-columns: 1fr; }
+  .settings-tabs { flex-direction: row; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--line); padding: 8px; }
+  .settings-tabs button { white-space: nowrap; padding: 6px 10px; }
+  .toolbar #settings-btn { order: 7; }
+  #settings-btn span { display: none; }
+}

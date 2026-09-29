@@ -89,7 +89,10 @@ test('ranges, go to session and densities keep the view consistent', async ({ pa
   for (const d of ['fine', 'coarse', 'standard']) {
     await page.click(`#density button[data-v="${d}"]`);
     await settle(page, 400);
-    await expect(page.locator('#legend-vol')).toContainText(d[0].toUpperCase() + d.slice(1));
+    const size = await page.evaluate(() => window.vl.state.view.starts.at(-1).size);
+    expect(size).toBeGreaterThan(0);
+    await expect(page.locator('#legend-vol')).toContainText('Volume candles · 1 =');       // the legend names the candle size
+    expect(await page.evaluate(() => window.vl.state.density)).toBe(d);
     await expect(page.locator('#day-label')).toContainText('15 Jul');           // same place in time
   }
   await page.click('#ranges button[data-range="all"]');
@@ -225,6 +228,58 @@ test('layers, theme, scanner and session list', async ({ page }) => {
   await page.waitForFunction(() => document.getElementById('state-overlay').classList.contains('hidden'));
   await settle(page);
   await expectInSync(page);
+});
+
+test('chart settings: colour modes, thresholds, clock overlays, scales, saved and reset', async ({ page }) => {
+  await open(page);
+  const urgentShare = () => page.evaluate(() => { const b = window.vl.bars(); return b.filter((r) => r[12] === 2).length / b.length; });
+  const lastColor = () => page.evaluate(() => {
+    const b = window.vl.bars(), k = b.findIndex((r) => r[11] >= 90);
+    return window.vl.state.settings.colorBy + ':' + (k >= 0 ? k : -1);
+  });
+  const base = await urgentShare();
+
+  await page.keyboard.press(',');
+  await expect(page.locator('#settings')).toBeVisible();
+  await expect(page.locator('#set-size-note')).toContainText('1 candle =');
+
+  await page.click('[data-tab=style]');
+  await page.check('input[data-set=colorBy][value=heat]');
+  expect(await lastColor()).toMatch(/^heat:/);
+
+  await page.click('[data-tab=urgency]');
+  await page.locator('input[data-set=urgent]').fill('80');
+  await expect(page.locator('#out-urgent')).toHaveText('80');
+  const strict = await urgentShare();
+  expect(strict).toBeLessThan(base);                                  // a higher threshold flags fewer candles
+
+  await page.click('[data-tab=clock]');
+  await page.check('input[data-set=ribbon]');
+  await page.selectOption('select[data-set=bandMin]', '60');
+
+  await page.click('[data-tab=scales]');
+  await page.check('input[data-set=scale][value=log]');
+  expect(await page.evaluate(() => window.vl.volChart.priceScale('right', 0).options().mode)).toBe(1);
+
+  await page.click('[data-tab=candles]');
+  await page.check('input[name=density][value=fine]');
+  await expect(page.locator('#density button.on')).toHaveText('Fine');
+  await page.click('#settings button[value=done]');
+  await expect(page.locator('#settings')).toBeHidden();
+
+  await page.reload();                                                 // remembered in this browser
+  await page.waitForFunction(() => window.vl && window.vl.bars().length);
+  const s = await page.evaluate(() => window.vl.state.settings);
+  expect(s).toMatchObject({ colorBy: 'heat', urgent: 80, ribbon: true, bandMin: 60, scale: 'log' });
+  expect(await page.evaluate(() => window.vl.bars().every((r) => (r[12] === 2) === (r[11] != null && r[11] >= 80)))).toBe(true);
+
+  await page.keyboard.press(',');
+  await page.click('#settings-reset');
+  await page.click('#settings button[value=done]');
+  expect(await page.evaluate(() => window.vl.state.settings)).toMatchObject({ colorBy: 'both', urgent: 60, watch: 30, scale: 'normal', ribbon: false });
+  await expect(page.locator('#density button.on')).toHaveText('Standard');
+  expect(await urgentShare()).toBeCloseTo(base, 3);                   // defaults restore the engine's classes exactly
+  await expectLegendsPlaced(page);
 });
 
 test('snapshot downloads a PNG', async ({ page }) => {
