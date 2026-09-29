@@ -5,3 +5,6 @@ __pycache__/
 .vercel/
 config.py
 .env
+node_modules/
+test-results/
+playwright-report/

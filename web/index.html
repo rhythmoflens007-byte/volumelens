@@ -3,118 +3,154 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>VolumeLens · see urgency before it hits you</title>
-<meta name="description" content="An urgency chart for NSE stocks: candles built from shares traded, not minutes, so bursts of urgent volume that a 5-minute chart hides become visible. Open source, backtested, replayable.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' fill='%23089981'/%3E%3Crect x='6.5' y='2' width='3' height='12' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' fill='%23F23645'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/app.css?v=14">
+<title>VolumeLens · Urgency terminal</title>
+<meta name="description" content="An urgency terminal for NSE stocks: candles built from shares traded, not minutes, so bursts of urgent volume that a time chart hides become visible. Open source, backtested, replayable.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%23565b66'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%23565b66'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/app.css?v=24">
 </head>
 <body>
 <header class="toolbar">
-  <div class="brand">VolumeLens <span class="tag">urgency chart</span></div>
-  <div class="sep"></div>
+  <div class="brand" aria-label="VolumeLens">
+    <svg class="mark" viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="6" width="3" height="8" rx="1"/><rect class="hot" x="6.5" y="2" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="6" rx="1"/></svg>
+    <span class="word">VolumeLens</span>
+  </div>
   <div class="symbol-picker">
     <input id="symbol-input" type="text" autocomplete="off" spellcheck="false" aria-label="Symbol">
     <ul id="symbol-list" class="dropdown" hidden></ul>
   </div>
-  <div class="sep"></div>
-  <button id="prev-day" class="icon-btn" title="Previous day" aria-label="Previous day">&#8249;</button>
-  <select id="date-select" aria-label="Trading day"></select>
-  <button id="next-day" class="icon-btn" title="Next day" aria-label="Next day">&#8250;</button>
-  <div class="sep"></div>
-  <button id="replay-btn" class="text-btn replay-btn" title="Replay the session bar by bar (R)"><span class="play-glyph">&#9654;</span> Replay</button>
-  <span class="tb-label">Volume bar <b id="bar-size">–</b></span>
+  <div class="daynav">
+    <button id="prev-day" class="icon-btn" title="Previous session" aria-label="Previous session"><svg viewBox="0 0 16 16"><path d="M10 3 5 8l5 5"/></svg></button>
+    <select id="date-select" aria-label="Session"></select>
+    <button id="next-day" class="icon-btn" title="Next session" aria-label="Next session"><svg viewBox="0 0 16 16"><path d="m6 3 5 5-5 5"/></svg></button>
+  </div>
+  <button id="replay-btn" class="btn replay-btn" title="Replay the session (R)"><svg viewBox="0 0 16 16"><path d="M4 3v10l9-5z" class="fill"/></svg><span>Replay</span></button>
+  <span class="chip" title="Every volume candle holds this many shares, set from the stock's previous 20 sessions">Candle <b id="bar-size" class="num">–</b></span>
   <div class="spacer"></div>
-  <label class="toggle" title="Shade urgent minutes on the 5-minute chart"><input id="zones-toggle" type="checkbox" checked> Urgency on time chart</label>
-  <button id="theme-btn" class="text-btn" title="Switch theme">Light</button>
-  <button id="help-btn" class="text-btn" title="How to read the charts">Help</button>
+  <details class="menu" id="layers">
+    <summary class="btn">Layers</summary>
+    <div class="menu-body">
+      <label><input type="checkbox" data-layer="compare" checked> Compare chart</label>
+      <label><input type="checkbox" data-layer="shade" checked> Urgency on compare chart</label>
+      <label><input type="checkbox" data-layer="vpin" checked> VPIN line</label>
+      <label><input type="checkbox" data-layer="aai"> Absorption pane</label>
+    </div>
+  </details>
+  <button id="theme-btn" class="btn" title="Switch theme">Light</button>
+  <button id="help-btn" class="btn" title="How to read VolumeLens (?)">Help</button>
 </header>
 
 <main class="workspace">
-  <section class="charts">
-    <div class="chart-wrap" id="time-wrap">
-      <div id="time-chart" class="chart"></div>
-      <div class="legend" id="legend-time"></div>
-    </div>
-    <div class="resizer" id="resizer" title="Drag to resize"></div>
-    <div class="chart-wrap" id="vol-wrap">
+  <nav class="rail" aria-label="Chart tools">
+    <button class="tool active" data-tool="cursor" title="Cursor (V)" aria-label="Cursor"><svg viewBox="0 0 16 16"><path d="M4 2.5v10l2.8-2.6 1.9 4.1 1.6-.7-1.9-4.1H12z" class="fill"/></svg></button>
+    <button class="tool" id="magnet" title="Magnet: snap crosshair to candle prices (G)" aria-label="Magnet"><svg viewBox="0 0 16 16"><path d="M4 3v5a4 4 0 0 0 8 0V3M4 3h2.5v5a1.5 1.5 0 0 0 3 0V3H12"/></svg></button>
+    <span class="rail-sep"></span>
+    <button class="tool" data-tool="hline" title="Horizontal line (H)" aria-label="Horizontal line"><svg viewBox="0 0 16 16"><path d="M1.5 8h13"/><circle cx="8" cy="8" r="1.6" class="fill"/></svg></button>
+    <button class="tool" data-tool="trend" title="Trend line (T)" aria-label="Trend line"><svg viewBox="0 0 16 16"><path d="M3 12.5 13 3.5"/><circle cx="3" cy="12.5" r="1.6" class="fill"/><circle cx="13" cy="3.5" r="1.6" class="fill"/></svg></button>
+    <button class="tool" data-tool="zone" title="Zone (Z)" aria-label="Zone"><svg viewBox="0 0 16 16"><rect x="2.5" y="4" width="11" height="8" rx="1"/></svg></button>
+    <button class="tool" data-tool="measure" title="Measure (M)" aria-label="Measure"><svg viewBox="0 0 16 16"><path d="M2 11.5 11.5 2l2.5 2.5L4.5 14z"/><path d="M5 9.5 6.3 10.8M7 7.5l1.3 1.3M9 5.5l1.3 1.3"/></svg></button>
+    <span class="rail-sep"></span>
+    <button class="tool" id="undo" title="Undo (Ctrl+Z)" aria-label="Undo"><svg viewBox="0 0 16 16"><path d="M5 5.5H10a3.5 3.5 0 0 1 0 7H6"/><path d="M7.5 3 5 5.5 7.5 8"/></svg></button>
+    <button class="tool" id="clear" title="Remove all drawings" aria-label="Remove all drawings"><svg viewBox="0 0 16 16"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.7 9h5.6l.7-9"/></svg></button>
+    <span class="rail-sep"></span>
+    <button class="tool" id="snapshot" title="Save chart as image (S)" aria-label="Save chart as image"><svg viewBox="0 0 16 16"><path d="M2.5 5h2.2l1.2-1.5h4.2L11.3 5h2.2v7.5h-11z"/><circle cx="8" cy="8.6" r="2.2"/></svg></button>
+    <button class="tool" id="fullscreen" title="Fullscreen (F)" aria-label="Fullscreen"><svg viewBox="0 0 16 16"><path d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"/></svg></button>
+  </nav>
+
+  <section class="stage" id="stage">
+    <div class="pane-main" id="vol-wrap">
       <div id="vol-chart" class="chart"></div>
       <div class="legend" id="legend-vol"></div>
       <div class="legend" id="legend-fill"></div>
       <div class="legend" id="legend-aai"></div>
+      <div class="unfold-card" id="unfold-card" hidden></div>
+      <div class="state-overlay" id="state-overlay"><div class="skeleton"></div></div>
+    </div>
+    <div class="resizer" id="resizer" title="Drag to resize"></div>
+    <div class="pane-compare" id="time-wrap">
+      <div class="compare-head">
+        <span class="compare-title">Compare <span class="muted">time chart</span></span>
+        <div class="segmented" id="tf" role="group" aria-label="Time frame"></div>
+        <span class="hint muted">Click a candle to unfold it</span>
+        <button class="icon-btn" id="compare-close" title="Hide compare chart" aria-label="Hide compare chart"><svg viewBox="0 0 16 16"><path d="m4 4 8 8M12 4l-8 8"/></svg></button>
+      </div>
+      <div class="compare-body">
+        <div id="time-chart" class="chart"></div>
+        <div class="legend" id="legend-time"></div>
+      </div>
     </div>
     <div class="replay-bar" id="replay-bar" hidden>
-      <span class="replay-tag">REPLAY</span>
-      <button id="rp-back" class="icon-btn" title="Step back (←)" aria-label="Step back">&#9198;</button>
-      <button id="rp-play" class="icon-btn play" title="Play / pause (Space)" aria-label="Play">&#9654;</button>
-      <button id="rp-fwd" class="icon-btn" title="Step forward (→)" aria-label="Step forward">&#9197;</button>
-      <select id="rp-speed" title="Replay speed: market minutes per real second" aria-label="Replay speed">
+      <span class="replay-tag">Replay</span>
+      <button id="rp-back" class="icon-btn" title="Step back (←)" aria-label="Step back"><svg viewBox="0 0 16 16"><path d="M4 3v10M12.5 3 6 8l6.5 5z" class="fill"/></svg></button>
+      <button id="rp-play" class="icon-btn play" title="Play / pause (Space)" aria-label="Play"><svg viewBox="0 0 16 16" id="rp-play-icon"><path d="M4.5 3v10l8.5-5z" class="fill"/></svg></button>
+      <button id="rp-fwd" class="icon-btn" title="Step forward (→)" aria-label="Step forward"><svg viewBox="0 0 16 16"><path d="M12 3v10M3.5 3 10 8l-6.5 5z" class="fill"/></svg></button>
+      <select id="rp-speed" title="Market minutes per real second" aria-label="Replay speed">
         <option value="1">1 min/s</option>
         <option value="3" selected>3 min/s</option>
         <option value="10">10 min/s</option>
         <option value="30">30 min/s</option>
       </select>
-      <input id="rp-scrub" type="range" min="0" max="0" value="0" aria-label="Replay position">
-      <span id="rp-clock" class="rp-clock">–</span>
-      <button id="rp-exit" class="text-btn" title="Leave replay (Esc)">Exit</button>
+      <input id="rp-scrub" type="range" min="1" max="1" value="1" aria-label="Replay position">
+      <span id="rp-clock" class="rp-clock num">–</span>
+      <button id="rp-exit" class="btn" title="Leave replay (Esc)">Exit</button>
     </div>
   </section>
 
   <aside class="sidebar">
-    <div class="panel day-card">
-      <div class="panel-head">Today's urgency <span class="muted" id="day-label"></span></div>
-      <div class="score-row"><span id="day-score" class="score">–</span><span class="score-note">of the day's shares traded in urgent bars</span></div>
-      <p id="day-burst" class="burst"></p>
-    </div>
-    <div class="panel">
-      <div class="panel-head">Scanner <span class="muted">latest session</span></div>
-      <table class="scanner"><thead><tr><th>Symbol</th><th>Urgency</th><th>Burst</th><th>Chg%</th></tr></thead><tbody id="scanner"></tbody></table>
-    </div>
-    <div class="panel">
-      <div class="panel-head">Most urgent sessions</div>
-      <ul id="top-sessions" class="sessions"></ul>
-    </div>
-    <div class="panel">
-      <div class="panel-head">Urgency alerts <span id="alert-count" class="muted"></span></div>
+    <section class="card day-card">
+      <header>Urgency <span class="muted" id="day-label"></span></header>
+      <div class="score-row"><span id="day-score" class="score num">–</span><span class="score-note">of the session's shares traded in urgent candles</span></div>
+      <button id="day-burst" class="burst" type="button" title="Focus the chart on this burst"></button>
+    </section>
+    <section class="card">
+      <header>Scanner <span class="muted">latest session</span></header>
+      <table class="grid-table scanner"><thead><tr><th>Symbol</th><th>Urgency</th><th>Burst</th><th>Chg</th></tr></thead><tbody id="scanner"></tbody></table>
+    </section>
+    <section class="card">
+      <header>Most urgent sessions</header>
+      <ul id="top-sessions" class="list"></ul>
+    </section>
+    <section class="card">
+      <header>Alerts <span id="alert-count" class="muted"></span></header>
       <ul id="alerts" class="alerts"></ul>
-    </div>
-    <div class="panel">
-      <div class="panel-head">Tested <span class="muted">out-of-sample</span></div>
+    </section>
+    <section class="card">
+      <header>Evidence <span class="muted">backtest</span></header>
       <p class="proof" id="proof"></p>
-      <table class="results" id="results"></table>
-    </div>
+      <table class="grid-table results" id="results"></table>
+    </section>
   </aside>
 </main>
 
 <footer class="statusbar">
-  <span id="status-data">Loading…</span>
+  <span id="status-data" class="num">Loading…</span>
   <span class="spacer"></span>
-  <span>Educational tool, not investment advice · <a href="https://github.com/tradingview/lightweight-charts" target="_blank" rel="noopener">Charts by TradingView</a></span>
+  <span>Educational tool, not investment advice</span>
+  <span class="dot">·</span>
+  <a href="https://www.tradingview.com/" target="_blank" rel="noopener">Charting by TradingView Lightweight Charts™</a>
 </footer>
 
 <dialog id="help">
-  <h2>How to read VolumeLens</h2>
+  <h2>Reading VolumeLens</h2>
   <dl>
-    <dt>The idea</dt>
-    <dd>A 5-minute chart gives every 5 minutes the same space, whether 10 people traded or 10,000. VolumeLens draws a new candle every time a fixed number of shares trade, so a burst of urgent volume becomes many candles instead of one.</dd>
-    <dt>Urgent (orange)</dt>
-    <dd>The last 3 volume candles filled in under 40% of their normal time. In testing, a big move (30-minute range over 2× normal) followed urgent bars about 2.3× as often as other bars. Urgency says <em>something is happening</em>, not which way the price will go.</dd>
-    <dt>Time chart</dt>
-    <dd>Normal 5-minute candles. Orange shading marks urgent minutes. Hover a volume candle to see exactly which minutes it covered.</dd>
-    <dt>Fill time + VPIN</dt>
-    <dd>Bars show how long each volume candle took to fill (short = urgent). White: smoothed fill time. Dashed: normal fill time for that moment. Blue: VPIN (0–1), how one-sided buying versus selling was over the last 50 candles.</dd>
-    <dt>Absorption</dt>
-    <dd>1 − actual price move ÷ expected move. Near 1: heavy volume but the price held. Shown for context only.</dd>
+    <dt>Volume candles</dt>
+    <dd>A new candle forms every time a fixed number of shares trade, not every few minutes. When trading rushes in, candles arrive fast; when it is quiet, they arrive slowly.</dd>
+    <dt>Urgent (amber)</dt>
+    <dd>The last 3 candles filled in under 40% of their normal time. In testing, a large move (a 30-minute range over 2× normal) followed urgent candles about 2.3× as often as other candles. Urgency means something is happening; it does not say which way the price will go.</dd>
+    <dt>Fill time</dt>
+    <dd>How many minutes each candle took to fill. Short bars are urgent. The dashed line is the normal fill time for that moment; the blue line is VPIN (0–1), how one-sided buying versus selling was over the last 50 candles.</dd>
+    <dt>Compare chart</dt>
+    <dd>A normal time chart (1–30 minutes) for comparison. Amber shading marks urgent minutes. Click any of its candles to unfold it into the volume candles inside.</dd>
     <dt>Replay</dt>
-    <dd>Plays the session candle by candle at market pace, so urgent bursts arrive fast. Every value you see was computable at that moment: nothing is redrawn later (checked by automated tests).</dd>
-    <dt>Scanner</dt>
-    <dd>Urgency score = share of the day's volume that traded in urgent bars. Burst = the largest run of urgent bars.</dd>
+    <dd>Plays the session at market pace. Every value on screen was computable at that moment; nothing is redrawn later (verified by automated tests).</dd>
     <dt>Keys</dt>
-    <dd>R replay · Space play/pause · ← → step · Esc exit replay / fit day.</dd>
+    <dd><kbd>V</kbd> cursor · <kbd>H</kbd> line · <kbd>T</kbd> trend · <kbd>Z</kbd> zone · <kbd>M</kbd> measure · <kbd>G</kbd> magnet · <kbd>Ctrl Z</kbd> undo · <kbd>S</kbd> snapshot · <kbd>F</kbd> fullscreen · <kbd>R</kbd> replay · <kbd>Space</kbd> play · <kbd>←</kbd><kbd>→</kbd> step · <kbd>Esc</kbd> back</dd>
   </dl>
-  <form method="dialog"><button class="text-btn">Close</button></form>
+  <form method="dialog"><button class="btn">Close</button></form>
 </dialog>
 
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
-<script src="js/app.js?v=14"></script>
+<script type="module" src="js/main.js?v=24"></script>
 </body>
 </html>

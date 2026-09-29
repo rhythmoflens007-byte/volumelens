@@ -73,7 +73,7 @@ def export(df, alerts, sessions, sizes, results) -> None:
         day_meta = []
         for date in dates:
             day = g[g["date"] == date]
-            candles = L.time_candles(sess, date)
+            minutes = L.time_candles(sess, date, minutes=1)     # the browser builds any time frame from these
             day_alerts, rows, used = [], [], set()
             for i, (idx, r) in enumerate(day.iterrows()):
                 t = int(round(r["end"])) + C.IST_OFFSET_SECONDS
@@ -90,8 +90,8 @@ def export(df, alerts, sessions, sizes, results) -> None:
                     a = alert_by_idx[idx]
                     day_alerts.append({"i": i, "t": t, "prob": round(a["prob"], 3), "kind": a["kind"], "reasons": a["reasons"]})
             payload = {"symbol": sym, "date": date, "barSize": sizes[sym][date],
-                       "candles": [[int(c.time) + C.IST_OFFSET_SECONDS, _r(c.open), _r(c.high), _r(c.low), _r(c.close), int(c.volume)]
-                                   for c in candles.itertuples()],
+                       "minutes": [[int(c.time) + C.IST_OFFSET_SECONDS, _r(c.open), _r(c.high), _r(c.low), _r(c.close), int(c.volume)]
+                                   for c in minutes.itertuples()],
                        "bars": rows, "alerts": day_alerts}
             stats = U.day_stats(day)
             payload["urgency"] = stats
