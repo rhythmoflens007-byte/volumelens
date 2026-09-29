@@ -1,273 +1,303 @@
 {
- "rows": 3804,
- "big_moves": 447,
- "base_rate": 0.11750788643533124,
- "test_days": 20,
+ "rows": 37292,
+ "big_moves": 3996,
+ "base_rate": 0.10715434945832887,
+ "test_days": 74,
  "stocks": [
-  "NARMADA",
+  "AXISBANK",
+  "HDFCBANK",
+  "ICICIBANK",
+  "INFY",
+  "ITC",
   "PNB",
   "RELIANCE",
   "SBIN",
+  "TCS",
   "TECHM",
   "YESBANK"
  ],
  "auc": {
-  "time_volume_spike": 0.7199183118721013,
-  "recent_volatility": 0.7709181872488324,
-  "vpin": 0.6574651882597772,
-  "fill_pace": 0.6683541250044067,
-  "time_chart_model": 0.746827058088911,
-  "volumelens": 0.7784835053669283,
-  "volume_clock_model": 0.6776730848559123
+  "time_volume_spike": 0.7026952354226458,
+  "recent_volatility": 0.7248352468719667,
+  "vpin": 0.591602549810743,
+  "fill_pace": 0.6876221863983156,
+  "time_chart_model": 0.765167990401502,
+  "volumelens": 0.7629748133224526,
+  "volume_clock_model": 0.7204235072109592
  },
- "alert_rate": 0.20130612244897958,
+ "alert_rate": 0.11008801349675794,
  "at_same_alert_rate": {
   "time_volume_spike": {
-   "caught": 0.42953020134228187,
-   "precision": 0.2532981530343008
+   "caught": 0.3028028028028028,
+   "precision": 0.2982499383781119
   },
   "recent_volatility": {
-   "caught": 0.45861297539149887,
-   "precision": 0.3023598820058997
+   "caught": 0.2605105105105105,
+   "precision": 0.28528363935324746
   },
   "vpin": {
-   "caught": 0.4563758389261745,
-   "precision": 0.27019867549668874
+   "caught": 0.21446446446446446,
+   "precision": 0.20871894788114953
   },
   "fill_pace": {
-   "caught": 0.3713646532438479,
-   "precision": 0.21842105263157896
+   "caught": 0.3063063063063063,
+   "precision": 0.29810034096444227
   },
   "time_chart_model": {
-   "caught": 0.40492170022371365,
-   "precision": 0.21095571095571095
+   "caught": 0.3911411411411411,
+   "precision": 0.3777187046882552
   },
   "volumelens": {
-   "caught": 0.5145413870246085,
-   "precision": 0.3002610966057441
+   "caught": 0.38963963963963966,
+   "precision": 0.379108838568298
   },
   "volume_clock_model": {
-   "caught": 0.41834451901565994,
-   "precision": 0.19418483904465214
+   "caught": 0.35685685685685686,
+   "precision": 0.3457807953443259
   }
  },
  "per_stock": {
-  "NARMADA": {
-   "vpin": 0.6084995251661919,
-   "time_chart_model": 0.7269553072625698,
-   "volumelens": 0.7250598563447725
+  "AXISBANK": {
+   "vpin": 0.5726914006667329,
+   "time_chart_model": 0.7482471345056402,
+   "volumelens": 0.7539047572801185
+  },
+  "HDFCBANK": {
+   "vpin": 0.5896645452134712,
+   "time_chart_model": 0.771523371558298,
+   "volumelens": 0.772364595662663
+  },
+  "ICICIBANK": {
+   "vpin": 0.48446136001159923,
+   "time_chart_model": 0.6517949833260838,
+   "volumelens": 0.6418885022473539
+  },
+  "INFY": {
+   "vpin": 0.533052941897357,
+   "time_chart_model": 0.7607487166219583,
+   "volumelens": 0.7554718031291275
+  },
+  "ITC": {
+   "vpin": 0.6184462357199664,
+   "time_chart_model": 0.7283546465389733,
+   "volumelens": 0.7327543276770649
   },
   "PNB": {
-   "vpin": 0.4235023041474654,
-   "time_chart_model": 0.5978652263374485,
-   "volumelens": 0.4975565843621399
+   "vpin": 0.6118184321057215,
+   "time_chart_model": 0.8072029625313732,
+   "volumelens": 0.8037074860421042
   },
   "RELIANCE": {
-   "vpin": 0.4909880798506391,
-   "time_chart_model": 0.7463647134855665,
-   "volumelens": 0.7361230791325578
+   "vpin": 0.525751783544801,
+   "time_chart_model": 0.7070950142957624,
+   "volumelens": 0.7083841449489828
   },
   "SBIN": {
-   "vpin": 0.7691928324839717,
-   "time_chart_model": 0.7236906997066891,
-   "volumelens": 0.8295119271135261
+   "vpin": 0.6195786035813265,
+   "time_chart_model": 0.7406646186428352,
+   "volumelens": 0.741123290646776
+  },
+  "TCS": {
+   "vpin": 0.5343740393338882,
+   "time_chart_model": 0.8139565572725705,
+   "volumelens": 0.8098237247977447
   },
   "TECHM": {
-   "vpin": 0.627616718506383,
-   "time_chart_model": 0.7110588756717399,
-   "volumelens": 0.7303187153247699
+   "vpin": 0.5757663753787419,
+   "time_chart_model": 0.7548026490543273,
+   "volumelens": 0.7431100501087264
   },
   "YESBANK": {
-   "vpin": 0.705,
-   "time_chart_model": 0.8979260369815092,
-   "volumelens": 0.8478260869565217
+   "vpin": 0.6683383879867737,
+   "time_chart_model": 0.8035437859354269,
+   "volumelens": 0.79750025010004
   }
  },
  "bootstrap": {
   "auc_ci": {
    "time_volume_spike": [
-    0.6268879991722955,
-    0.7781308013038294
+    0.675386251481695,
+    0.7266151591517365
    ],
    "recent_volatility": [
-    0.6772908684693071,
-    0.8387589018122461
+    0.6930280485878964,
+    0.7525262258534501
    ],
    "vpin": [
-    0.5173190064416859,
-    0.766022558749322
+    0.5531188543667963,
+    0.6258562859551497
    ],
    "fill_pace": [
-    0.5776972932257918,
-    0.7252226021767108
+    0.6584228452501665,
+    0.7128017379188614
    ],
    "time_chart_model": [
-    0.6621513199842466,
-    0.8225680252768954
+    0.7394769508628027,
+    0.7869985556584378
    ],
    "volumelens": [
-    0.7020129934868884,
-    0.8351985986286641
+    0.7378955952957942,
+    0.7849348393729638
    ],
    "volume_clock_model": [
-    0.5835806802705866,
-    0.7487693100239675
+    0.6922465934823983,
+    0.7446405408217488
    ]
   },
   "diff": {
    "volumelens - recent_volatility": {
-    "mean": 0.007134600103907942,
+    "mean": 0.038554818244500355,
     "ci": [
-     -0.040734705590203715,
-     0.06150188635147617
+     0.024285746613288094,
+     0.05424615314895303
     ],
-    "share_above_zero": 0.589
+    "share_above_zero": 1.0
    },
    "volumelens - time_chart_model": {
-    "mean": 0.02874961016508774,
+    "mean": -0.002139680973382517,
     "ci": [
-     -0.010064572835255074,
-     0.07411413196828552
+     -0.006111373788064409,
+     0.0013699269843425756
     ],
-    "share_above_zero": 0.917
+    "share_above_zero": 0.135
    },
    "volumelens - vpin": {
-    "mean": 0.12130986397862568,
+    "mean": 0.1719844608045932,
     "ci": [
-     0.030384241709293155,
-     0.2226762557352857
+     0.14102897766799335,
+     0.2030292376048309
     ],
-    "share_above_zero": 0.998
+    "share_above_zero": 1.0
    },
    "volumelens - time_volume_spike": {
-    "mean": 0.05900132373801586,
+    "mean": 0.060740643043471654,
     "ci": [
-     0.01353612264216157,
-     0.12451320010959503
+     0.0451757926801203,
+     0.07573700066569308
     ],
-    "share_above_zero": 0.999
+    "share_above_zero": 1.0
    },
    "fill_pace - vpin": {
-    "mean": 0.00887395887149089,
+    "mean": 0.09618208862097051,
     "ci": [
-     -0.08538461650062444,
-     0.09891025714754244
+     0.06451065640746456,
+     0.12830255686001038
     ],
-    "share_above_zero": 0.593
+    "share_above_zero": 1.0
    },
    "volume_clock_model - time_chart_model": {
-    "mean": -0.07471158035270412,
+    "mean": -0.04455790199579476,
     "ci": [
-     -0.1831558954038448,
-     0.016186846325227554
+     -0.05769202417078972,
+     -0.030497851399446187
     ],
-    "share_above_zero": 0.074
+    "share_above_zero": 0.0
    }
   }
  },
  "urgency": {
   "all_day": {
    "fast": {
-    "bars": 677.0,
-    "next30_range_x_normal": 1.24636399331257,
-    "big_move_rate": 0.19940915805022155
+    "bars": 3617.0,
+    "next30_range_x_normal": 1.5341063745924846,
+    "big_move_rate": 0.30854299142936137
    },
    "normal": {
-    "bars": 3365.0,
-    "next30_range_x_normal": 1.0321287473855358,
-    "big_move_rate": 0.07696879643387816
+    "bars": 31292.0,
+    "next30_range_x_normal": 1.0153429884796994,
+    "big_move_rate": 0.06886744215774
    },
    "watch": {
-    "bars": 679.0,
-    "next30_range_x_normal": 1.1868299441174308,
-    "big_move_rate": 0.12812960235640647
+    "bars": 6693.0,
+    "next30_range_x_normal": 1.2317626569578637,
+    "big_move_rate": 0.14298520842671447
    }
   },
   "after_10_30": {
    "fast": {
-    "bars": 531.0,
-    "next30_range_x_normal": 1.2041315921993596,
-    "big_move_rate": 0.192090395480226
+    "bars": 2402.0,
+    "next30_range_x_normal": 1.3267837941945553,
+    "big_move_rate": 0.2077435470441299
    },
    "normal": {
-    "bars": 2623.0,
-    "next30_range_x_normal": 0.9634465139882302,
-    "big_move_rate": 0.04765535646206634
+    "bars": 25522.0,
+    "next30_range_x_normal": 0.9783837827928579,
+    "big_move_rate": 0.05493299898127106
    },
    "watch": {
-    "bars": 520.0,
-    "next30_range_x_normal": 1.1153979937852307,
-    "big_move_rate": 0.08846153846153847
+    "bars": 5137.0,
+    "next30_range_x_normal": 1.1571482240226778,
+    "big_move_rate": 0.10531438582830446
    }
   },
   "shuffle": {
-   "real_auc": 0.6353858729560635,
-   "shuffled_mean": 0.5674721978542516,
-   "shuffled_max": 0.5956510392432157
+   "real_auc": 0.684473011279856,
+   "shuffled_mean": 0.6055425205829679,
+   "shuffled_max": 0.6133101516302849
   }
  },
  "direction": {
-  "zones": 113,
-  "continued": 0.6194690265486725,
+  "zones": 647,
+  "continued": 0.4605873261205564,
   "chance_range": [
-   0.4078093548984075,
-   0.5921906451015926
+   0.4614722244354332,
+   0.5385277755645668
   ]
  },
  "stability": {
   "fast_threshold": {
    "fast<0.30": {
-    "urgent_share": 0.1012497352255878,
-    "big_move_after_urgent": 0.2175732217573222,
-    "big_move_after_other": 0.08885222719773744,
-    "lift": 2.448708700043284
+    "urgent_share": 0.050478342387385224,
+    "big_move_after_urgent": 0.3619047619047619,
+    "big_move_after_other": 0.08779302313806896,
+    "lift": 4.1222496841874
    },
    "fast<0.35": {
-    "urgent_share": 0.12116077102308832,
-    "big_move_after_urgent": 0.19755244755244755,
-    "big_move_after_other": 0.08869607134249216,
-    "lift": 2.22729648069322
+    "urgent_share": 0.06740060574010864,
+    "big_move_after_urgent": 0.3305991440798859,
+    "big_move_after_other": 0.08508170524253827,
+    "lift": 3.885666644050716
    },
    "fast<0.40": {
-    "urgent_share": 0.14340182164795595,
-    "big_move_after_urgent": 0.19940915805022155,
-    "big_move_after_other": 0.08555885262116716,
-    "lift": 2.3306665755927627
+    "urgent_share": 0.08694293543579636,
+    "big_move_after_urgent": 0.30854299142936137,
+    "big_move_after_other": 0.08192707647755693,
+    "lift": 3.766068614859991
    },
    "fast<0.45": {
-    "urgent_share": 0.16500741368354163,
-    "big_move_after_urgent": 0.196405648267009,
-    "big_move_after_other": 0.08320649416539827,
-    "lift": 2.3604605654528945
+    "urgent_share": 0.10932166722753714,
+    "big_move_after_urgent": 0.28188214599824096,
+    "big_move_after_other": 0.07950558644140983,
+    "lift": 3.545438234154386
    },
    "fast<0.50": {
-    "urgent_share": 0.1870366447786486,
-    "big_move_after_urgent": 0.18459796149490373,
-    "big_move_after_other": 0.08285565398645128,
-    "lift": 2.2279464660925803
+    "urgent_share": 0.1328301523965194,
+    "big_move_after_urgent": 0.26058631921824105,
+    "big_move_after_other": 0.07728129504379642,
+    "lift": 3.3719196743605684
    }
   },
   "bars_per_day": {
    "50 bars/day": {
-    "fill_pace": 0.6880092693864158,
-    "vpin": 0.6993672386440307,
-    "time_chart_model": 0.7744002860934133,
-    "volumelens": 0.7600940469356321
+    "fill_pace": 0.7004998259019519,
+    "vpin": 0.5936929306238548,
+    "time_chart_model": 0.7695288027555367,
+    "volumelens": 0.7664470169877324
    },
    "75 bars/day": {
-    "fill_pace": 0.6683541250044067,
-    "vpin": 0.6574651882597772,
-    "time_chart_model": 0.746827058088911,
-    "volumelens": 0.7784835053669283
+    "fill_pace": 0.6876221863983156,
+    "vpin": 0.591602549810743,
+    "time_chart_model": 0.765167990401502,
+    "volumelens": 0.7629748133224526
    },
    "100 bars/day": {
-    "fill_pace": 0.6568823748088022,
-    "vpin": 0.6767967161906556,
-    "time_chart_model": 0.7485843152319057,
-    "volumelens": 0.766351630375337
+    "fill_pace": 0.6788331892165478,
+    "vpin": 0.5960850164616988,
+    "time_chart_model": 0.7608997246370309,
+    "volumelens": 0.7569080129517952
    }
   },
-  "pace_auc": 0.6353858729560635
+  "pace_auc": 0.684473011279856
  },
- "seconds": 14.8
+ "seconds": 504.6
 }

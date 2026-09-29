@@ -1,37 +1,35 @@
 // Drawing tools for the volume chart: horizontal line, trend line, zone, measure.
 //
-// Trend lines, zones and the measure are drawn by a series primitive (a native Lightweight
-// Charts plugin), so they are painted by the chart itself and stay locked to their candles and
-// prices through every zoom, pan and resize. Points are stored as (logical bar index, price):
-// the bars of a day never change, so an index is stable, and it also works in empty space.
-// Horizontal lines are native price lines on both charts, since both share the price axis.
+// Trend lines, zones and the measure are painted by a series primitive (a native Lightweight
+// Charts plugin), so they move with every zoom, pan and resize. Points are stored as (time,
+// price) and converted to a candle position when drawn, so drawings stay attached to the right
+// candle even when earlier sessions are loaded in front of them. Horizontal lines are native
+// price lines on both charts, since both share the price axis.
 
-import { B, clamp, fmt, shares, store } from './util.js?v=24';
+import { B, clamp, fmt, shares, store, lastAtOrBefore, xAt } from './util.js?v=35';
 
 const TOOLS = ['cursor', 'hline', 'trend', 'zone', 'measure'];
 
 class DrawingLayer {
-  constructor(colors) {
+  constructor(colors, toX) {
     this.colors = colors;
+    this.toX = toX;       // time -> x coordinate
     this.items = [];      // committed trend lines and zones
     this.preview = null;  // shape being drawn
-    this.measure = null;  // the current measurement, if any
-    this.flash = null;    // {i0, i1, alpha}: highlight used by Unfold
+    this.measure = null;  // the current measurement
+    this.flash = null;    // {t0, t1, alpha}: highlight used by Unfold and focus
     this.label = null;    // (a, b) -> text lines for the measure box
     this._view = { renderer: () => ({ draw: (target) => this._draw(target) }), zOrder: () => 'top' };
   }
 
-  attached({ chart, series, requestUpdate }) {
-    this.chart = chart; this.series = series; this.requestUpdate = requestUpdate;
-  }
+  attached({ chart, series, requestUpdate }) { this.chart = chart; this.series = series; this.requestUpdate = requestUpdate; }
   detached() { this.requestUpdate = null; }
   updateAllViews() {}
   paneViews() { return [this._view]; }
   update() { if (this.requestUpdate) this.requestUpdate(); }
 
   _xy(p) {
-    const x = this.chart.timeScale().logicalToCoordinate(p.i);
-    const y = this.series.priceToCoordinate(p.p);
+    const x = this.toX(p.t), y = this.series.priceToCoordinate(p.p);
     return x == null || y == null ? null : [x, y];
   }
 
@@ -39,11 +37,10 @@ class DrawingLayer {
     target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
       const c = this.colors();
       if (this.flash) {
-        const x0 = this.chart.timeScale().logicalToCoordinate(this.flash.i0 - 0.5);
-        const x1 = this.chart.timeScale().logicalToCoordinate(this.flash.i1 + 0.5);
+        const x0 = this.toX(this.flash.t0, -0.5), x1 = this.toX(this.flash.t1, 0.5);
         if (x0 != null && x1 != null) {
           ctx.fillStyle = `rgba(255, 152, 0, ${0.16 * this.flash.alpha})`;
-          ctx.fillRect(x0, 0, x1 - x0, mediaSize.height);
+          ctx.fillRect(x0, 0, Math.max(2, x1 - x0), mediaSize.height);
         }
       }
       for (const d of [...this.items, this.preview].filter(Boolean)) {
@@ -54,34 +51,30 @@ class DrawingLayer {
           ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
           for (const pt of [a, b]) { ctx.fillStyle = c.draw; ctx.beginPath(); ctx.arc(pt[0], pt[1], 2.5, 0, Math.PI * 2); ctx.fill(); }
         } else if (d.type === 'zone') {
-          ctx.fillStyle = c.zoneFill; ctx.strokeStyle = c.zoneLine; ctx.lineWidth = 1;
-          ctx.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
-          ctx.strokeRect(Math.min(a[0], b[0]) + 0.5, Math.min(a[1], b[1]) + 0.5, Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+          const x = Math.min(a[0], b[0]), y = Math.min(a[1], b[1]), w = Math.abs(b[0] - a[0]), h = Math.abs(b[1] - a[1]);
+          ctx.fillStyle = c.zoneFill; ctx.fillRect(x, y, w, h);
+          ctx.strokeStyle = c.zoneLine; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
         }
       }
       const m = this.measure;
-      if (m) {
-        const a = this._xy(m.a), b = this._xy(m.b);
-        if (a && b) {
-          const up = m.b.p >= m.a.p;
-          ctx.fillStyle = up ? 'rgba(8,153,129,0.14)' : 'rgba(242,54,69,0.14)';
-          ctx.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
-          ctx.strokeStyle = up ? '#089981' : '#f23645'; ctx.lineWidth = 1;
-          ctx.setLineDash([4, 3]);
-          ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
-          ctx.setLineDash([]);
-          const lines = this.label ? this.label(m.a, m.b) : [];
-          ctx.font = '500 11px "JetBrains Mono", monospace';
-          const w = Math.max(...lines.map((s) => ctx.measureText(s).width)) + 16, h = lines.length * 15 + 10;
-          let bx = b[0] + 10, by = b[1] - h / 2;
-          if (bx + w > mediaSize.width - 4) bx = b[0] - w - 10;
-          by = clamp(by, 4, mediaSize.height - h - 4);
-          ctx.fillStyle = up ? '#089981' : '#f23645';
-          roundRect(ctx, bx, by, w, h, 5); ctx.fill();
-          ctx.fillStyle = '#fff';
-          lines.forEach((s, k) => ctx.fillText(s, bx + 8, by + 18 + k * 15));
-        }
-      }
+      if (!m) return;
+      const a = this._xy(m.a), b = this._xy(m.b);
+      if (!a || !b) return;
+      const up = m.b.p >= m.a.p, col = up ? c.up : c.down;
+      ctx.fillStyle = up ? 'rgba(31,163,122,0.14)' : 'rgba(229,72,77,0.14)';
+      ctx.fillRect(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.abs(b[0] - a[0]), Math.abs(b[1] - a[1]));
+      ctx.strokeStyle = col; ctx.lineWidth = 1; ctx.setLineDash([4, 3]);
+      ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
+      ctx.setLineDash([]);
+      const lines = this.label ? this.label(m.a, m.b) : [];
+      ctx.font = '500 11px "JetBrains Mono", monospace';
+      const w = Math.max(...lines.map((s) => ctx.measureText(s).width)) + 16, h = lines.length * 15 + 10;
+      let bx = b[0] + 10;
+      if (bx + w > mediaSize.width - 4) bx = b[0] - w - 10;
+      const by = clamp(b[1] - h / 2, 4, mediaSize.height - h - 4);
+      ctx.fillStyle = col; roundRect(ctx, bx, by, w, h, 5); ctx.fill();
+      ctx.fillStyle = '#fff';
+      lines.forEach((s, k) => ctx.fillText(s, bx + 8, by + 18 + k * 15));
     });
   }
 }
@@ -93,60 +86,50 @@ function roundRect(ctx, x, y, w, h, r) {
 }
 
 /**
- * Wire the tools to the charts.
- * opts: { volChart, vCandles, tCandles, getDay(), colors(), onToolChange(tool) }
+ * opts: { volChart, vCandles, tCandles, getBars(), colors(), onToolChange(tool) }
+ * getBars() returns the continuous candle rows currently on the chart.
  */
 export function createTools(opts) {
-  const { volChart, vCandles, tCandles, getDay, colors, onToolChange } = opts;
-  const layer = new DrawingLayer(colors);
+  const { volChart, vCandles, tCandles, getBars, colors, onToolChange } = opts;
+  const ts = volChart.timeScale();
+
+  // time <-> candle position. Past the last candle, one minute of time = one candle slot.
+  const timeToLogical = (t) => {
+    const bars = getBars();
+    if (!bars.length) return null;
+    const last = bars.length - 1;
+    if (t > bars[last][B.T]) return last + (t - bars[last][B.T]) / 60;
+    return Math.max(0, lastAtOrBefore(bars, t, (r) => r[B.T]));
+  };
+  const logicalToTime = (i) => {
+    const bars = getBars();
+    const last = bars.length - 1;
+    if (i > last) return bars[last][B.T] + Math.round(i - last) * 60;
+    return bars[clamp(Math.round(i), 0, last)][B.T];
+  };
+  const toX = (t, shift = 0) => { const i = timeToLogical(t); return i == null ? null : xAt(ts, i + shift); };
+
+  const layer = new DrawingLayer(colors, toX);
   vCandles.attachPrimitive(layer);
 
-  let tool = 'cursor', pending = null, key = null, hlines = [], history = [];
+  let tool = 'cursor', pending = null, symbol = null, hlines = [], history = [];
 
   layer.label = (a, b) => {
-    const day = getDay();
-    const bars = day.bars;
-    const lo = clamp(Math.round(Math.min(a.i, b.i)), 0, bars.length - 1);
-    const hi = clamp(Math.round(Math.max(a.i, b.i)), 0, bars.length - 1);
-    const n = hi - lo + 1;
+    const bars = getBars();
+    const lo = clamp(timeToLogical(Math.min(a.t, b.t)), 0, bars.length - 1);
+    const hi = clamp(timeToLogical(Math.max(a.t, b.t)), 0, bars.length - 1);
+    let vol = 0;
+    for (let k = Math.round(lo); k <= Math.round(hi); k++) vol += bars[k][B.VOL];
+    const n = Math.round(hi) - Math.round(lo) + 1;
     const d = b.p - a.p;
-    const minutes = Math.max(0, Math.round((bars[hi][B.T] - bars[lo][B.START]) / 60));
+    const minutes = Math.max(0, Math.round((bars[Math.round(hi)][B.T] - bars[Math.round(lo)][B.START]) / 60));
     return [`${d >= 0 ? '+' : ''}${fmt(d)} (${d >= 0 ? '+' : ''}${fmt((100 * d) / a.p)}%)`,
-      `${n} candles · ${shares(n * day.barSize)} sh`, `${minutes} min`];
+      `${n} candles · ${shares(vol)} sh`, `${minutes} min`];
   };
 
-  const pointFrom = (p) => {
-    if (!p.point || (p.paneIndex != null && p.paneIndex !== 0)) return null;
-    const i = p.logical ?? volChart.timeScale().coordinateToLogical(p.point.x);
-    const price = vCandles.coordinateToPrice(p.point.y);
-    return i == null || price == null ? null : { i: Math.round(i), p: price };
-  };
-
-  function setTool(t) {
-    if (!TOOLS.includes(t)) return;
-    tool = t; pending = null; layer.preview = null; layer.update();
-    volChart.applyOptions({ handleScroll: { pressedMouseMove: t === 'cursor' } });
-    onToolChange(t);
-  }
-
-  function addHline(price, remember = true) {
-    const c = colors();
-    const opt = { price, color: c.draw, lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: '' };
-    const h = { price, lines: [vCandles.createPriceLine(opt), tCandles.createPriceLine(opt)] };
-    hlines.push(h);
-    if (remember) history.push({ kind: 'hline', ref: h });
-    save();
-  }
-
-  function removeHline(h) {
-    h.lines[0] && vCandles.removePriceLine(h.lines[0]);
-    h.lines[1] && tCandles.removePriceLine(h.lines[1]);
-    hlines = hlines.filter((x) => x !== h);
-  }
-
-  // Points are read from raw pointer events rather than the chart's click event: the chart
-  // swallows a quick second click (it waits to see if it becomes a double-click), which made
-  // fast two-click drawing miss points. A press that moves more than 4px is a pan, not a point.
+  // Points come from raw pointer events: the chart delays a quick second click (waiting for a
+  // possible double-click), which loses points when drawing fast. A press that moves more than
+  // 4px is a pan, not a point.
   const el = volChart.chartElement();
   let down = null;
   el.addEventListener('pointerdown', (e) => { down = tool === 'cursor' || e.button !== 0 ? null : { x: e.clientX, y: e.clientY }; });
@@ -155,15 +138,18 @@ export function createTools(opts) {
     down = null;
     const box = el.getBoundingClientRect();
     const x = e.clientX - box.left, y = e.clientY - box.top;
-    const pane0 = volChart.panes()[0].getHeight();
-    if (x > volChart.timeScale().width() || y > pane0) return;       // price axis or lower panes
-    onPoint({ point: { x, y }, paneIndex: 0, logical: volChart.timeScale().coordinateToLogical(x) });
+    if (x > ts.width() || y > volChart.panes()[0].getHeight()) return;      // price axis or lower panes
+    place({ x, y });
   });
 
-  function onPoint(p) {
-    if (tool === 'cursor') return;
-    const pt = pointFrom(p);
-    if (!pt) return;
+  const pointAt = ({ x, y }) => {
+    const i = ts.coordinateToLogical(x), p = vCandles.coordinateToPrice(y);
+    return i == null || p == null ? null : { t: logicalToTime(i), p };
+  };
+
+  function place(xy) {
+    const pt = pointAt(xy);
+    if (!pt || tool === 'cursor') return;
     if (tool === 'hline') { addHline(pt.p); return; }
     if (!pending) { pending = { type: tool, a: pt, b: pt }; return; }
     const shape = { type: pending.type, a: pending.a, b: pt };
@@ -174,28 +160,46 @@ export function createTools(opts) {
   }
 
   volChart.subscribeCrosshairMove((p) => {
-    if (!pending) return;
-    const pt = pointFrom(p);
+    if (!pending || !p.point || (p.paneIndex != null && p.paneIndex !== 0)) return;
+    const pt = pointAt(p.point);
     if (!pt) return;
     pending.b = pt;
-    if (pending.type === 'measure') layer.measure = pending;
-    else layer.preview = pending;
+    if (pending.type === 'measure') layer.measure = pending; else layer.preview = pending;
     layer.update();
   });
 
-  function save() {
-    if (!key) return;
-    store(`vl:shapes:${key.symbol}:${key.date}`, layer.items);
-    store(`vl:hlines:${key.symbol}`, hlines.map((h) => h.price));
+  function setTool(t) {
+    if (!TOOLS.includes(t)) return;
+    tool = t; pending = null; layer.preview = null; layer.update();
+    volChart.applyOptions({ handleScroll: { pressedMouseMove: t === 'cursor' } });
+    onToolChange(t);
   }
 
-  /** Switch to another stock/day: drop the old drawings, load the saved ones. */
-  function load(symbol, date) {
+  function addHline(price, remember = true) {
+    const opt = { price, color: colors().draw, lineWidth: 1, lineStyle: 0, axisLabelVisible: true, title: '' };
+    const h = { price, lines: [vCandles.createPriceLine(opt), tCandles.createPriceLine(opt)] };
+    hlines.push(h);
+    if (remember) { history.push({ kind: 'hline', ref: h }); save(); }
+  }
+  function removeHline(h) {
+    vCandles.removePriceLine(h.lines[0]);
+    tCandles.removePriceLine(h.lines[1]);
+    hlines = hlines.filter((x) => x !== h);
+  }
+
+  function save() {
+    if (!symbol) return;
+    store(`vl:shapes:${symbol}`, layer.items);
+    store(`vl:hlines:${symbol}`, hlines.map((h) => h.price));
+  }
+
+  /** Switch stock: drop the old drawings and load the saved ones. */
+  function load(sym) {
     for (const h of [...hlines]) removeHline(h);
-    layer.items = store(`vl:shapes:${symbol}:${date}`) || [];
+    symbol = sym;
+    layer.items = (store(`vl:shapes:${sym}`) || []).filter((d) => d.a && d.a.t != null);
     layer.measure = null; layer.preview = null; pending = null; history = [];
-    key = { symbol, date };
-    for (const price of store(`vl:hlines:${symbol}`) || []) addHline(price, false);
+    for (const price of store(`vl:hlines:${sym}`) || []) addHline(price, false);
     layer.update();
   }
 
@@ -222,19 +226,19 @@ export function createTools(opts) {
   }
 
   function recolor() {
-    const c = colors();
-    for (const h of hlines) for (const l of h.lines) l.applyOptions({ color: c.draw });
+    for (const h of hlines) for (const l of h.lines) l.applyOptions({ color: colors().draw });
     layer.update();
   }
 
   return {
-    setTool, load, undo, clear, escape, recolor,
+    setTool, load, undo, clear, escape, recolor, timeToLogical,
     get tool() { return tool; },
-    flash(i0, i1, ms = 2400) {                    // highlight a range of bars, fading out
+    refresh() { layer.update(); },
+    flash(t0, t1, ms = 2400) {                     // highlight a stretch of time, fading out
       const start = performance.now();
       const step = (now) => {
         const k = (now - start) / ms;
-        layer.flash = k >= 1 ? null : { i0, i1, alpha: k < 0.15 ? k / 0.15 : 1 - (k - 0.15) / 0.85 };
+        layer.flash = k >= 1 ? null : { t0, t1, alpha: k < 0.15 ? k / 0.15 : 1 - (k - 0.15) / 0.85 };
         layer.update();
         if (k < 1) requestAnimationFrame(step);
       };

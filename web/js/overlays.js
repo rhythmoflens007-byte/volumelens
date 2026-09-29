@@ -1,0 +1,62 @@
+// Chart overlays drawn as Lightweight Charts series primitives: they are painted with the chart
+// on every frame, so they cost nothing on hover and never force a data update.
+
+import { dayLabel, xAt } from './util.js?v=35';
+
+class Primitive {
+  constructor() { this._view = { renderer: () => ({ draw: (t) => this._draw(t) }), zOrder: () => this.z }; this.z = 'bottom'; }
+  attached({ chart, series, requestUpdate }) { this.chart = chart; this.series = series; this.requestUpdate = requestUpdate; }
+  detached() { this.requestUpdate = null; }
+  updateAllViews() {}
+  paneViews() { return [this._view]; }
+  update() { if (this.requestUpdate) this.requestUpdate(); }
+}
+
+/** Vertical line at each session open, labelled with the date and that session's urgency. */
+export class SessionSeparators extends Primitive {
+  constructor(colors, labels = true) { super(); this.colors = colors; this.labels = labels; this.starts = []; }
+  set(starts) { this.starts = starts; this.update(); }       // [{index, date, score}]
+
+  _draw(target) {
+    target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
+      const ts = this.chart.timeScale(), c = this.colors();
+      ctx.font = '500 10.5px "JetBrains Mono", monospace';
+      let lastLabelX = -1e9;
+      for (const s of this.starts) {
+        if (s.index === 0) continue;
+        const x = xAt(ts, s.index - 0.5);
+        if (x == null || x < 0 || x > mediaSize.width) continue;
+        ctx.strokeStyle = c.separator; ctx.lineWidth = 1; ctx.setLineDash([3, 4]);
+        ctx.beginPath(); ctx.moveTo(Math.round(x) + 0.5, 0); ctx.lineTo(Math.round(x) + 0.5, mediaSize.height); ctx.stroke();
+        ctx.setLineDash([]);
+        if (!this.labels || x - lastLabelX < 120) continue;
+        lastLabelX = x;
+        const text = `${dayLabel(s.date)}`, pct = s.score != null ? ` ${Math.round(s.score)}%` : '';
+        const w = ctx.measureText(text + pct).width + 12;
+        ctx.fillStyle = c.chip; ctx.fillRect(x + 4, mediaSize.height - 22, w, 17);
+        ctx.fillStyle = c.chipText; ctx.fillText(text, x + 10, mediaSize.height - 10);
+        if (pct) { ctx.fillStyle = c.accent; ctx.fillText(pct, x + 10 + ctx.measureText(text).width, mediaSize.height - 10); }
+      }
+    });
+  }
+}
+
+/** Compare chart: amber bands on candles that contain urgent volume, plus the hover band. */
+export class CompareBands extends Primitive {
+  constructor(colors) { super(); this.colors = colors; this.urgent = []; this.hover = null; }
+  setUrgent(indices) { this.urgent = indices; this.update(); }      // candle indices
+  setHover(range) { this.hover = range; this.update(); }            // {i0, i1} candle indices or null
+
+  _draw(target) {
+    target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
+      const ts = this.chart.timeScale(), c = this.colors();
+      const band = (i0, i1, color) => {
+        const x0 = xAt(ts, i0 - 0.5), x1 = xAt(ts, i1 + 0.5);
+        if (x0 == null || x1 == null || x1 < 0 || x0 > mediaSize.width) return;
+        ctx.fillStyle = color; ctx.fillRect(x0, 0, Math.max(1, x1 - x0), mediaSize.height);
+      };
+      for (const i of this.urgent) band(i, i, c.shade);
+      if (this.hover) band(this.hover.i0, this.hover.i1, c.hover);
+    });
+  }
+}

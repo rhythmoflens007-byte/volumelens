@@ -1,68 +1,73 @@
 # VolumeLens backtest
 
-Walk-forward: models trained on earlier days only (1-day gap), tested on **20 unseen trading days**, 3,804 volume bars, 447 big moves (base rate 12%), stocks: NARMADA, PNB, RELIANCE, SBIN, TECHM, YESBANK.
+Walk-forward: models trained on earlier days only (1-day gap), tested on **74 unseen trading days**, 37,292 volume bars, 3996 big moves (base rate 11%), stocks: AXISBANK, HDFCBANK, ICICIBANK, INFY, ITC, PNB, RELIANCE, SBIN, TCS, TECHM, YESBANK.
 Big move = price range over the next 30 full minutes > 2x the normal 30-minute range. Decisions are made at the end of the minute a bar completes in.
 
 ## 1. Who spots big moves best?
 
-| Method | AUC | 95% CI | Caught (same alert rate 20%) | Precision |
+| Method | AUC | 95% CI | Caught (same alert rate 11%) | Precision |
 |---|---|---|---|---|
-| VPIN (rebuilt) | 0.657 | 0.517–0.766 | 46% | 27% |
-| Volume clock: fill pace | 0.668 | 0.578–0.725 | 37% | 22% |
-| Model: volume-clock signals only | 0.678 | 0.584–0.749 | 42% | 19% |
-| Time chart: 5-min volume spike | 0.720 | 0.627–0.778 | 43% | 25% |
-| Model: time-chart signals only | 0.747 | 0.662–0.823 | 40% | 21% |
-| Time chart: last 30-min range | 0.771 | 0.677–0.839 | 46% | 30% |
-| VolumeLens: time chart + volume clock | 0.778 | 0.702–0.835 | 51% | 30% |
+| VPIN (rebuilt) | 0.592 | 0.553–0.626 | 21% | 21% |
+| Volume clock: fill pace | 0.688 | 0.658–0.713 | 31% | 30% |
+| Time chart: 5-min volume spike | 0.703 | 0.675–0.727 | 30% | 30% |
+| Model: volume-clock signals only | 0.720 | 0.692–0.745 | 36% | 35% |
+| Time chart: last 30-min range | 0.725 | 0.693–0.753 | 26% | 29% |
+| VolumeLens: time chart + volume clock | 0.763 | 0.738–0.785 | 39% | 38% |
+| Model: time-chart signals only | 0.765 | 0.739–0.787 | 39% | 38% |
 
 ## 2. Are the differences real? (1,000 block-bootstrap resamples of test days)
 
 | Comparison | AUC difference | 95% CI | Share of resamples > 0 |
 |---|---|---|---|
-| VolumeLens: time chart + volume clock vs Time chart: last 30-min range | +0.007 | -0.041 to +0.062 | 59% |
-| VolumeLens: time chart + volume clock vs Model: time-chart signals only | +0.029 | -0.010 to +0.074 | 92% |
-| VolumeLens: time chart + volume clock vs VPIN (rebuilt) | +0.121 | +0.030 to +0.223 | 100% |
-| VolumeLens: time chart + volume clock vs Time chart: 5-min volume spike | +0.059 | +0.014 to +0.125 | 100% |
-| Volume clock: fill pace vs VPIN (rebuilt) | +0.009 | -0.085 to +0.099 | 59% |
-| Model: volume-clock signals only vs Model: time-chart signals only | -0.075 | -0.183 to +0.016 | 7% |
+| VolumeLens: time chart + volume clock vs Time chart: last 30-min range | +0.039 | +0.024 to +0.054 | 100% |
+| VolumeLens: time chart + volume clock vs Model: time-chart signals only | -0.002 | -0.006 to +0.001 | 14% |
+| VolumeLens: time chart + volume clock vs VPIN (rebuilt) | +0.172 | +0.141 to +0.203 | 100% |
+| VolumeLens: time chart + volume clock vs Time chart: 5-min volume spike | +0.061 | +0.045 to +0.076 | 100% |
+| Volume clock: fill pace vs VPIN (rebuilt) | +0.096 | +0.065 to +0.128 | 100% |
+| Model: volume-clock signals only vs Model: time-chart signals only | -0.045 | -0.058 to -0.030 | 0% |
 
 ## 3. Does urgency mean anything?
 
 | After a bar that is… | Bars | Next-30-min range vs normal | Big move follows |
 |---|---|---|---|
-| fast | 677 | 1.25x | 20% |
-| watch | 679 | 1.19x | 13% |
-| normal | 3365 | 1.03x | 8% |
+| fast | 3617 | 1.53x | 31% |
+| watch | 6693 | 1.23x | 14% |
+| normal | 31292 | 1.02x | 7% |
 
-Outside the opening hour: big move after fast bars 19% vs normal bars 5%.
-Shuffle test (fill times randomly reordered within each day, 100 times): real AUC 0.635, shuffled mean 0.567, best shuffled 0.596.
-Direction: after 113 fast-inflow zones the price continued the same way 62% of the time (chance range 41%–59%).
+Outside the opening hour: big move after fast bars 21% vs normal bars 5%.
+Shuffle test (fill times randomly reordered within each day, 100 times): real AUC 0.684, shuffled mean 0.606, best shuffled 0.613.
+Direction: after 647 fast-inflow zones the price continued the same way 46% of the time (chance range 46%–54%).
 
 ## 4. Stability across settings
 
 | Urgency rule | Bars flagged | Big move after urgent | After others | Lift |
 |---|---|---|---|---|
-| pace <0.30 | 10% | 22% | 9% | 2.4x |
-| pace <0.35 | 12% | 20% | 9% | 2.2x |
-| pace <0.40 | 14% | 20% | 9% | 2.3x |
-| pace <0.45 | 17% | 20% | 8% | 2.4x |
-| pace <0.50 | 19% | 18% | 8% | 2.2x |
+| pace <0.30 | 5% | 36% | 9% | 4.1x |
+| pace <0.35 | 7% | 33% | 9% | 3.9x |
+| pace <0.40 | 9% | 31% | 8% | 3.8x |
+| pace <0.45 | 11% | 28% | 8% | 3.5x |
+| pace <0.50 | 13% | 26% | 8% | 3.4x |
 
 | Bar size | Fill pace AUC | VPIN AUC | Time-chart model AUC | VolumeLens AUC |
 |---|---|---|---|---|
-| 50 bars/day | 0.688 | 0.699 | 0.774 | 0.760 |
-| 75 bars/day | 0.668 | 0.657 | 0.747 | 0.778 |
-| 100 bars/day | 0.657 | 0.677 | 0.749 | 0.766 |
+| 50 bars/day | 0.700 | 0.594 | 0.770 | 0.766 |
+| 75 bars/day | 0.688 | 0.592 | 0.765 | 0.763 |
+| 100 bars/day | 0.679 | 0.596 | 0.761 | 0.757 |
 
 ## 5. Per stock (AUC)
 
 | Stock | VPIN | Time-chart model | VolumeLens |
 |---|---|---|---|
-| NARMADA | 0.608 | 0.727 | 0.725 |
-| PNB | 0.424 | 0.598 | 0.498 |
-| RELIANCE | 0.491 | 0.746 | 0.736 |
-| SBIN | 0.769 | 0.724 | 0.830 |
-| TECHM | 0.628 | 0.711 | 0.730 |
-| YESBANK | 0.705 | 0.898 | 0.848 |
+| AXISBANK | 0.573 | 0.748 | 0.754 |
+| HDFCBANK | 0.590 | 0.772 | 0.772 |
+| ICICIBANK | 0.484 | 0.652 | 0.642 |
+| INFY | 0.533 | 0.761 | 0.755 |
+| ITC | 0.618 | 0.728 | 0.733 |
+| PNB | 0.612 | 0.807 | 0.804 |
+| RELIANCE | 0.526 | 0.707 | 0.708 |
+| SBIN | 0.620 | 0.741 | 0.741 |
+| TCS | 0.534 | 0.814 | 0.810 |
+| TECHM | 0.576 | 0.755 | 0.743 |
+| YESBANK | 0.668 | 0.804 | 0.798 |
 
-_Generated by backtest.py in 14.8s._
+_Generated by backtest.py in 504.6s._
