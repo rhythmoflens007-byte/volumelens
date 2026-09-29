@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=41';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=41';
-import { loadIndex, Series } from './data.js?v=41';
-import { createTools } from './tools.js?v=41';
-import { SessionSeparators, CompareBands, ClockOverlay } from './overlays.js?v=41';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=42';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=42';
+import { loadIndex, Series } from './data.js?v=42';
+import { createTools } from './tools.js?v=42';
+import { SessionSeparators, CompareBands, ClockOverlay } from './overlays.js?v=42';
 
 const LWC = window.LightweightCharts;
 
@@ -384,6 +384,12 @@ function connectLive(symbol) {
   live.symbol = symbol;
   const src = new EventSource(`${live.url}/stream?symbol=${encodeURIComponent(symbol)}`);
   live.source = src;
+  src.onopen = async () => {                // connected: say so before the first candle arrives (candles start at 09:30)
+    let mode = 'live';
+    try { mode = (await (await fetch(`${live.url}/status`, { cache: 'no-store' })).json()).mode; } catch (e) { /* keep default */ }
+    if (live.source !== src || /\d\d:\d\d:\d\d/.test($('live-badge').textContent)) return;
+    setLiveBadge(mode === 'live' ? 'on' : 'sim', `${mode === 'live' ? 'LIVE' : 'SIMULATED'} · connected`);
+  };
   src.onmessage = (e) => { try { onLive(JSON.parse(e.data)); } catch (err) { /* ignore a malformed frame */ } };
   src.onerror = () => {
     if (live.source !== src) return;
