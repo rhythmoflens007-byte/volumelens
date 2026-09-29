@@ -1,0 +1,4 @@
+# Upload only the static site. Credentials (config.py), raw data and code stay on this machine.
+/*
+!/web
+!/vercel.json
