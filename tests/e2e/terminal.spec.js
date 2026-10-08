@@ -417,3 +417,48 @@ test('accessibility: no serious or critical WCAG 2 AA issues', async ({ page }) 
   const bad = res.violations.filter((v) => ['serious', 'critical'].includes(v.impact));
   expect(bad.map((v) => `${v.id}: ${v.nodes.length} × ${v.help}`)).toEqual([]);
 });
+
+test('AI analyst: sends the numbers in view and renders the reply as text', async ({ page }) => {
+  let sent;
+  await page.route('**/api/analyst', async (route) => {                    // no real AI call in tests
+    sent = route.request().postDataJSON();
+    await route.fulfill({ json: { model: 'test-model',
+      text: '- Urgent run of **10 candles** <img src=x onerror=alert(1)>\n- VPIN peaked at 0.45\n\nWatch: whether urgency returns' } });
+  });
+  await open(page);
+  await page.click('#ai-explain');
+  await expect(page.locator('#ai-out li')).toHaveCount(2);
+  await expect(page.locator('#ai-out img')).toHaveCount(0);                // markup in a reply is shown as text
+  await expect(page.locator('#ai-out li').first()).toContainText('<img src=x');
+  await expect(page.locator('#ai-out b').first()).toHaveText('10 candles');
+  await expect(page.locator('#ai-out .ai-watch')).toContainText('whether urgency returns');
+  await expect(page.locator('#ai-out .ai-meta')).toContainText('test-model');
+
+  const c = sent.context;
+  expect(sent.question).toBe('');
+  expect(c.symbol).toBe('RELIANCE');
+  const inView = await page.evaluate(() => {                                // the context covers exactly the candles in view
+    const { volChart, state } = window.vl, r = volChart.timeScale().getVisibleLogicalRange();
+    return Math.min(Math.floor(r.to), state.upto - 1) - Math.max(Math.ceil(r.from), 0) + 1;
+  });
+  expect(c.view.candles).toBe(inView);
+  expect(c.urgency.urgent_candles).toBeLessThanOrEqual(c.view.candles);
+  expect(c.price.low).toBeLessThanOrEqual(Math.min(c.price.open, c.price.close));
+  expect(c.flow.zones.every((z) => ['accumulation', 'distribution'].includes(z.kind))).toBe(true);
+  expect(JSON.stringify(sent).length).toBeLessThan(20000);
+
+  await page.fill('#ai-question', 'Where was the distribution, then?');    // letters in the box are not chart shortcuts
+  await page.press('#ai-question', 'Enter');
+  await expect(page.locator('#ai-out .ai-q')).toHaveText('Where was the distribution, then?');
+  expect(sent.question).toBe('Where was the distribution, then?');
+  await expect(page.locator('.tool.active')).toHaveAttribute('data-tool', 'cursor');
+});
+
+test('AI analyst: a busy server shows a clear message and the buttons recover', async ({ page }) => {
+  await page.route('**/api/analyst', (route) => route.fulfill({ status: 503, json: { error: 'The AI analyst is busy right now. Try again in a moment.' } }));
+  await open(page);
+  await page.click('#ai-explain');
+  await expect(page.locator('#ai-out.error')).toContainText('busy right now');
+  await expect(page.locator('#ai-explain')).toBeEnabled();
+  errors = errors.filter((e) => !/status of 503/.test(e));                 // the browser logs the failed request itself
+});

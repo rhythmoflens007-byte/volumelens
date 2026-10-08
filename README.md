@@ -23,6 +23,7 @@ on all 11 stocks. It ties a well-built time-chart model. Urgency does not predic
 | **Volume clock made visible** | Time bands shade every other 15/30/60 minutes of clock time: a quiet half hour is a thin band, an urgent one a wide band full of candles, with its candle count. A pace ribbon and ×N marks (one minute that alone filled N candles) are optional. |
 | **Chart settings** | Gear or `,`: candle size, colour by direction + urgent / urgency heat / direction, urgency thresholds, clock overlays, normal / log / percent scale, panes. Remembered per browser. |
 | **Flow & accumulation** | Net buyer-minus-seller volume over the last 10 volume candles, with a session cumulative delta. Where flow leans one way but price barely moves (absorption), candles are marked accumulation (green) or distribution (red). On by default. |
+| **AI analyst** | "Explain this view" or ask a question: the numbers behind the candles in view (urgency, bursts, VPIN, flow, accumulation and distribution zones, alerts) go to Gemini on the server, and a short plain-English read comes back. It describes the data and never advises. |
 | **Fill-time strip** | How long each candle took to fill, the normal fill time for that moment, and VPIN. |
 | **Compare chart** | A normal 1/3/5/15/30-minute chart for comparison, built in the browser from 1-minute data, with urgent minutes shaded. |
 | **Unfold** | Click a time candle: the main chart glides to the volume candles that formed inside it ("the 5-minute candle 15:05–15:10 unfolds into 22 volume candles, 22 urgent"). |
@@ -73,24 +74,26 @@ docs/          model card, test report, screenshots
 python -m venv .venv
 .venv/Scripts/pip install -r requirements.txt        # Windows; .venv/bin on macOS/Linux
 .venv/Scripts/python run.py                          # build web/data from data/*.csv
-.venv/Scripts/python -m http.server 8765 --directory web
+node dev.js                                          # site + AI analyst on http://127.0.0.1:8777
 ```
 
-Open <http://localhost:8765>. For live data during market hours:
+Open <http://127.0.0.1:8777>. The AI analyst needs a Gemini API key in `.env` (git-ignored):
+`GEMINI_API_KEY=...` (optional `GEMINI_MODEL`, default `gemini-3.5-flash`). Without it, or with a plain
+static server (`python -m http.server 8765 --directory web`), everything else works. For live data during market hours:
 
 ```bash
 .venv/Scripts/python -m live.server                                   # needs config.py with AngelOne keys
 .venv/Scripts/python -m live.server --simulate 2026-09-29 --speed 30  # replay a recorded day through the live path
 ```
 
-then open <http://localhost:8765/?live=http://localhost:8787>, or put the server's URL in `web/live.json`. Input is one CSV per stock in `data/`:
+then open <http://127.0.0.1:8777/?live=http://localhost:8787>, or put the server's URL in `web/live.json`. Input is one CSV per stock in `data/`:
 `timestamp,open,high,low,close,volume` (1-minute NSE candles).
 
 ## Verify it
 
 ```bash
 .venv/Scripts/python -m pytest -q      # 16 tests: engine, no-repaint, quality gate, live = batch
-npm install && npx playwright test     # 40 browser checks in Edge and Chrome
+npm install && npx playwright test     # 64 checks in Edge and Chrome, AI analyst included (Gemini stubbed)
 .venv/Scripts/python backtest.py       # walk-forward validation with bootstrap intervals
 ```
 
@@ -105,8 +108,9 @@ and next steps are in the [model card](docs/MODEL_CARD.md).
 
 ## Deploy
 
-`vercel.json` serves `web/` as a static site with security headers; connect the folder or
-repository in Vercel, no build step.
+`vercel.json` serves `web/` as a static site with security headers, plus one function,
+`api/analyst.js`, for the AI analyst. Connect the folder or repository in Vercel, no build step, and set
+`GEMINI_API_KEY` in Project Settings → Environment Variables (the key never reaches the browser).
 
 ## License
 

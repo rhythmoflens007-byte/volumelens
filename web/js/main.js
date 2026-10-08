@@ -15,6 +15,7 @@ import { TIMEFRAMES, aggregate } from './timeframe.js?v=51';
 import { loadIndex, Series } from './data.js?v=51';
 import { createTools } from './tools.js?v=51';
 import { SessionSeparators, CompareBands, ClockOverlay, BrickOverlay } from './overlays.js?v=51';
+import { initAnalyst } from './analyst.js?v=51';
 
 const LWC = window.LightweightCharts;
 
@@ -1249,8 +1250,69 @@ resizer.addEventListener('pointerdown', (e) => {
 new ResizeObserver(perFrame(placeLegends)).observe($('vol-wrap'));
 document.addEventListener('pointerup', () => requestAnimationFrame(placeLegends));
 
+// ================================================================ AI analyst context
+// Compact numbers for the candles in view (only what was known up to the replay cursor). The AI
+// sees these numbers and nothing else, so everything it says can be checked on the chart.
+const r2 = (x, d = 2) => (x == null || Number.isNaN(x) ? null : Number(x.toFixed(d)));
+const median = (xs) => { const a = xs.filter((x) => x != null).sort((p, q) => p - q); return a.length ? a[Math.floor(a.length / 2)] : null; };
+/** Runs of consecutive candles (same session) where key(k) is the same non-null value. */
+function runs(from, to, key) {
+  const b = bars(), out = [];
+  for (let k = from; k <= to; k++) {
+    const v = key(k), last = out.at(-1);
+    if (v == null) continue;
+    if (last && last.v === v && last.to === k - 1 && b[k - 1][B.SESSION] === b[k][B.SESSION]) last.to = k;
+    else out.push({ v, from: k, to: k });
+  }
+  return out;
+}
+function analystContext() {
+  const b = bars(), n = state.upto;
+  if (!state.symbol || !n) return null;
+  const vr = volChart.timeScale().getVisibleLogicalRange();
+  const from = clamp(Math.ceil(vr?.from ?? 0), 0, n - 1), to = clamp(Math.floor(vr?.to ?? n - 1), from, n - 1);
+  const rows = b.slice(from, to + 1), f = state.flow || [];
+  const date = (k) => state.view.starts[b[k][B.SESSION]].date;
+  const at = (k, end = true) => `${date(k)} ${hhmm(b[k][end ? B.T : B.START])}`;
+  const span = (x) => ({ from: at(x.from, false), to: at(x.to), candles: x.to - x.from + 1 });
+  const peak = (key) => { let best = from; for (let k = from; k <= to; k++) if ((b[k][key] ?? -1) > (b[best][key] ?? -1)) best = k; return best; };
+  const sum = (x, i) => { let s = 0; for (let k = x.from; k <= x.to; k++) s += b[k][i]; return s; };
+  const pu = peak(B.UIDX), pv = peak(B.VPIN);
+  const dates = [...new Set(rows.map((r) => state.view.starts[r[B.SESSION]].date))];
+  const bursts = runs(from, to, (k) => (b[k][B.SPEED] === URGENT ? 'u' : null)).filter((x) => x.to > x.from)
+    .sort((p, q) => (q.to - q.from) - (p.to - p.from)).slice(0, 4)
+    .map((x) => ({ ...span(x), shares: sum(x, B.VOL), price_from: b[x.from][B.O], price_to: b[x.to][B.C] }));
+  const zones = runs(from, to, (k) => f[k]?.kind ?? null).sort((p, q) => (q.to - q.from) - (p.to - p.from)).slice(0, 6)
+    .map((x) => {
+      let lo = Infinity, hi = -Infinity, net = 0;
+      for (let k = x.from; k <= x.to; k++) { lo = Math.min(lo, b[k][B.L]); hi = Math.max(hi, b[k][B.H]); net += f[k].net; }
+      return { kind: x.v === 'acc' ? 'accumulation' : 'distribution', ...span(x), price_low: lo, price_high: hi, avg_net_flow: r2(net / (x.to - x.from + 1), 3) };
+    });
+  const urgent = rows.filter((r) => r[B.SPEED] === URGENT).length;
+  return {
+    symbol: state.symbol,
+    candle_size_shares: state.view.starts[b[to][B.SESSION]].size,
+    replay: !!state.replay,
+    view: { from: at(from, false), to: at(to), candles: rows.length },
+    sessions: dates.map((d) => ({ date: d, pct_of_session_shares_in_urgent_candles: r2(sessionMeta(d)?.urgency_score, 1) })),
+    price: { open: b[from][B.O], close: b[to][B.C], high: Math.max(...rows.map((r) => r[B.H])), low: Math.min(...rows.map((r) => r[B.L])),
+      change_pct: r2((b[to][B.C] / b[from][B.O] - 1) * 100) },
+    urgency: { urgent_candles: urgent, watch_candles: rows.filter((r) => r[B.SPEED] === WATCH).length, urgent_share_pct: r2((urgent / rows.length) * 100, 1),
+      peak_index: b[pu][B.UIDX], peak_at: at(pu), index_at_view_end: b[to][B.UIDX], longest_urgent_runs: bursts },
+    fill_time_min: { median: r2(median(rows.map((r) => r[B.FILL]))), normal_median: r2(median(rows.map((r) => r[B.BASE]))) },
+    vpin: { start: r2(b[from][B.VPIN], 3), end: r2(b[to][B.VPIN], 3), max: r2(b[pv][B.VPIN], 3), max_at: at(pv) },
+    flow: optional.flowNet && f.length >= n ? { net_flow_at_view_end: r2(f[to]?.net, 3), cumulative_delta_shares_at_view_end: Math.round(f[to]?.cvd ?? 0),
+      accumulation_candles: rows.filter((r, i) => f[from + i]?.kind === 'acc').length,
+      distribution_candles: rows.filter((r, i) => f[from + i]?.kind === 'dist').length, zones } : 'flow pane is off',
+    absorption_avg: r2(rows.reduce((s, r) => s + (r[B.AAIS] ?? 0), 0) / rows.length),
+    model_alerts: state.view.alerts.filter((a) => a.i >= from && a.i <= to).slice(-5)
+      .map((a) => ({ at: at(a.i), kind: a.kind, probability: a.prob, reasons: a.reasons })),
+  };
+}
+initAnalyst(analystContext);
+
 // read-only handles for the automated browser tests (only with ?debug in the URL)
-if (new URLSearchParams(location.search).has('debug')) window.vl = { volChart, timeChart, state, bars };
+if (new URLSearchParams(location.search).has('debug')) window.vl = { volChart, timeChart, state, bars, analystContext };
 
 styleUrgency();
 applyTheme();

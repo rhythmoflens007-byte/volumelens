@@ -8,7 +8,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%23565b66'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23FF9800'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%23565b66'/%3E%3C/svg%3E">
 <link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/app.css?v=51">
+<link rel="stylesheet" href="css/app.css?v=52">
 </head>
 <body>
 <header class="toolbar">
@@ -113,6 +113,15 @@
       <div class="score-row"><span id="day-score" class="score num">–</span><span class="score-note">of the session's shares traded in urgent candles</span></div>
       <p class="day-size num" id="day-size"></p>
       <button id="day-burst" class="burst" type="button" title="Focus the chart on this burst"></button>
+    </section>
+    <section class="card ai-card" id="ai-card">
+      <header>AI analyst <span class="muted">Gemini · describes, never advises</span></header>
+      <button id="ai-explain" class="btn ai-explain" type="button">Explain this view</button>
+      <form id="ai-ask" class="ai-ask">
+        <input id="ai-question" type="text" maxlength="300" placeholder="Ask about this chart…" aria-label="Ask the AI analyst about the chart in view" autocomplete="off">
+        <button id="ai-ask-btn" class="btn" type="submit">Ask</button>
+      </form>
+      <div id="ai-out" class="ai-out" aria-live="polite" hidden></div>
     </section>
     <section class="card">
       <header>Data window</header>
@@ -243,6 +252,6 @@
 </dialog>
 
 <script src="vendor/lightweight-charts.standalone.production.js"></script>
-<script type="module" src="js/main.js?v=55"></script>
+<script type="module" src="js/main.js?v=57"></script>
 </body>
 </html>
