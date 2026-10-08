@@ -11,7 +11,7 @@ module.exports = defineConfig({
   workers: 1,
   reporter: [['list'], ['json', { outputFile: 'test-results/e2e.json' }]],
   use: {
-    baseURL: 'http://127.0.0.1:8777',
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:8777',       // BASE_URL=https://… tests a deployment
     viewport: { width: 1440, height: 900 },
     acceptDownloads: true,
   },

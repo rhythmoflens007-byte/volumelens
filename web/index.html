@@ -9,7 +9,7 @@
 <meta property="og:description" content="Charts that tick by shares, not minutes. Volume Bricks and an Urgency Index for NSE stocks.">
 <meta name="theme-color" content="#f5f2eb">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%2316150f'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23b4410f'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%2316150f'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/site.css?v=4">
+<link rel="stylesheet" href="css/site.css?v=5">
 </head>
 <body>
 
@@ -28,11 +28,11 @@
 
 <main class="wrap">
   <section class="hero">
-    <div class="meta"><span><b>VolumeLens</b></span><span>NSE equities</span><span>Volume-clock charting</span><span>Team 53 · HITS</span></div>
+    <div class="meta"><span><b>VolumeLens</b></span><span>NSE equities</span><span>A new chart type: urgency + accumulation</span><span>Team 53 · HITS</span></div>
     <div class="hero-grid">
       <h1 class="reveal">See when the market is <em>in a hurry.</em></h1>
       <div class="reveal d1">
-        <p class="lead">A time chart prints a candle every five minutes, busy or not. VolumeLens prints a <b>brick every time a fixed number of shares trade</b>, so a burst of urgent trading becomes visible the moment it starts.</p>
+        <p class="lead">A time chart prints a candle every five minutes, busy or not. VolumeLens prints a <b>brick every time a fixed number of shares trade</b>, so a burst of urgent trading becomes visible the moment it starts, and a <b>flow pane</b> shows whether that volume is quietly being <b>accumulated or distributed</b>.</p>
         <div class="cta"><a class="btn primary" href="terminal.html">Open the terminal <span class="arr">→</span></a><a class="btn" href="#method">Read the method</a></div>
       </div>
     </div>
@@ -69,11 +69,12 @@
     <div class="chapter">
       <div class="chapter-no"><b>02</b>Method</div>
       <div>
-        <h2 class="reveal">Three definitions, and nothing else.</h2>
-        <div class="cols">
+        <h2 class="reveal">Four definitions, and nothing else.</h2>
+        <div class="cols four">
           <div class="col reveal d1"><div class="n">Box size</div><h3>N shares, per stock</h3><p>The stock's average daily volume over its previous 20 sessions, divided by 75. RELIANCE today: <code>1,20,000</code> shares.</p></div>
           <div class="col reveal d2"><div class="n">Volume Brick</div><h3>Renko on a volume clock</h3><p>A brick prints every time N shares trade, and runs from the previous brick's close to its own close.</p></div>
           <div class="col reveal d3"><div class="n">Urgency Index</div><h3>How fast bricks fill</h3><p>The last three bricks' fill time against normal for that stock and time of day. At 60 they filled 2.5× faster than normal.</p></div>
+          <div class="col reveal d3"><div class="n">Flow</div><h3>Accumulation vs distribution</h3><p>Net buyer-minus-seller volume over the last ten bricks. When it leans one way but price barely moves (absorption), the pane marks accumulation (green) or distribution (red).</p></div>
         </div>
       </div>
     </div>

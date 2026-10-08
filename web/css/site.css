@@ -88,6 +88,7 @@ h2 { font: 400 clamp(30px, 3.8vw, 46px)/1.1 var(--serif); letter-spacing: -.02em
 .col p { color: var(--ink-2); margin: 0; font-size: 16px; }
 .col code, .doc-body code { font: 500 14px var(--mono); color: var(--ink); background: var(--paper-2); padding: 1px 5px; }
 .cols.two { grid-template-columns: 1fr 1fr; }
+.cols.four { grid-template-columns: repeat(4, 1fr); }
 .label { font: 500 12px/1 var(--mono); text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); }
 .label.hot { color: var(--accent); }
 
@@ -132,7 +133,7 @@ footer .sp { flex: 1; }
   .wrap { padding: 0 20px; }
   .hero { padding-top: 36px; }
   .hero-grid, .chapter { grid-template-columns: 1fr; gap: 20px; }
-  .cols, .cols.two, .features { grid-template-columns: 1fr; }
+  .cols, .cols.two, .cols.four, .features { grid-template-columns: 1fr; }
   .col + .col, .feature:not(:nth-child(3n + 1)) { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); }
   .facts { grid-template-columns: 1fr; }
   .fact + .fact { border-left: 0; padding-left: 0; border-top: 1px solid var(--rule); }

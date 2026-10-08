@@ -10,11 +10,11 @@
  * appends with series.update(). */
 
 import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, hhmmss, shortDate, dayLabel, shares,
-  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=50';
-import { TIMEFRAMES, aggregate } from './timeframe.js?v=50';
-import { loadIndex, Series } from './data.js?v=50';
-import { createTools } from './tools.js?v=50';
-import { SessionSeparators, CompareBands, ClockOverlay, BrickOverlay } from './overlays.js?v=50';
+  easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=51';
+import { TIMEFRAMES, aggregate } from './timeframe.js?v=51';
+import { loadIndex, Series } from './data.js?v=51';
+import { createTools } from './tools.js?v=51';
+import { SessionSeparators, CompareBands, ClockOverlay, BrickOverlay } from './overlays.js?v=51';
 
 const LWC = window.LightweightCharts;
 
@@ -47,7 +47,7 @@ const state = {
   tf: store('vl:tf') || 5,
   theme: store('vl:theme') || 'dark',
   magnet: false,
-  layers: Object.assign({ compare: true, shade: true, fill: false, aai: false, hollow: false }, store('vl:layers') || {}),
+  layers: Object.assign({ compare: true, shade: true, fill: false, aai: false, flow: true, hollow: false }, store('vl:layers') || {}),
   view: { bars: [], minutes: [], alerts: [], starts: [] },
   candles: [], upto: 0, cursor: null, burst: null,
   replay: null, playing: false, timer: null,
@@ -159,14 +159,28 @@ function setPanes() {
   if (state.layers.aai) {
     optional.aai = volChart.addSeries(LWC.BaselineSeries, { baseValue: { type: 'price', price: 0 }, lineWidth: 1.5, priceLineVisible: false, lastValueVisible: true,
       autoscaleInfoProvider: () => ({ priceRange: { minValue: -1.5, maxValue: 1 } }) }, pane);
+    pane++;
+  }
+  if (state.layers.flow) {
+    optional.flowNet = volChart.addSeries(LWC.HistogramSeries, { priceScaleId: 'flownet', priceLineVisible: false, lastValueVisible: false,
+      autoscaleInfoProvider: (base) => {                     // zero centred, fits the visible bars, opening spikes clip
+        const r = base()?.priceRange, m = clamp(Math.max(Math.abs(r?.minValue ?? 0), Math.abs(r?.maxValue ?? 0)), 0.15, 0.35);
+        return { priceRange: { minValue: -m, maxValue: m } };
+      } }, pane);
+    volChart.priceScale('flownet', pane).applyOptions({ visible: false, scaleMargins: { top: 0.58, bottom: 0.03 } });
+    optional.flowCvd = volChart.addSeries(LWC.LineSeries, { lineWidth: 2, priceLineVisible: false, lastValueVisible: true, crosshairMarkerVisible: false,
+      priceFormat: { type: 'volume' } }, pane);
+    volChart.priceScale('right', pane).applyOptions({ scaleMargins: { top: 0.3, bottom: 0.44 } });   // below the legend
   }
   const panes = volChart.panes();
   panes[0].setStretchFactor(4.2);
   panes[1].setStretchFactor(1.2);
   for (let k = 2; k < panes.length; k++) panes[k].setStretchFactor(1.1);
+  if (state.layers.flow) panes.at(-1).setStretchFactor(1.7);
   styleOptional();
   $('legend-fill').hidden = !state.layers.fill;
   $('legend-aai').hidden = !state.layers.aai;
+  $('legend-flow').hidden = !state.layers.flow;
 }
 function styleOptional() {
   const t = th();
@@ -175,6 +189,39 @@ function styleOptional() {
   optional.vpin?.applyOptions({ color: t.blue });
   optional.aai?.applyOptions({ topLineColor: t.aai, topFillColor1: `${t.aai}40`, topFillColor2: `${t.aai}08`,
     bottomLineColor: t.text, bottomFillColor1: 'rgba(120,123,134,0.04)', bottomFillColor2: 'rgba(120,123,134,0.18)' });
+  optional.flowCvd?.applyOptions({ color: t.smooth });
+}
+
+// ================================================================ flow: accumulation / distribution
+// Net flow = (buy - sell) / volume over the last FLOW_BARS volume candles of the session, with the
+// buy share estimated per minute (bulk volume classification). Cumulative delta resets each session.
+// A stretch is called accumulation (distribution) when net flow leans to buyers (sellers) while
+// the absorption index says price moved less than that volume normally moves it. Backward-looking only.
+const FLOW_BARS = 10, FLOW_LEAN = 0.08, FLOW_ABSORBED = 0.25;
+const delta = (r) => 2 * (r[B.BUY] ?? r[B.VOL] / 2) - r[B.VOL];
+/** Flow reading of candle k, given the reading of candle k-1 (for the running cumulative delta). */
+function flowStep(b, k, prev) {
+  const r = b[k], s = r[B.SESSION];
+  const cvd = (k > 0 && prev && b[k - 1][B.SESSION] === s ? prev.cvd : 0) + delta(r);
+  let num = 0, den = 0;
+  for (let j = k; j >= 0 && j > k - FLOW_BARS && b[j][B.SESSION] === s; j--) { num += delta(b[j]); den += b[j][B.VOL]; }
+  const net = den ? num / den : 0;
+  const absorbed = r[B.AAIS] != null && r[B.AAIS] >= FLOW_ABSORBED;
+  return { cvd, net, kind: absorbed && net >= FLOW_LEAN ? 'acc' : absorbed && net <= -FLOW_LEAN ? 'dist' : null };
+}
+function flowPoint(r, f) {
+  const t = th();
+  return {
+    flowNet: { time: r[B.T], value: f.net, color: f.kind === 'acc' ? t.up : f.kind === 'dist' ? t.down : f.net >= 0 ? t.volUp : t.volDown },
+    flowCvd: { time: r[B.T], value: f.cvd },
+  };
+}
+function flowPoints(vb) {
+  const f = [];
+  for (let k = 0; k < vb.length; k++) f.push(flowStep(vb, k, f[k - 1]));
+  state.flow = f;
+  const pts = vb.map((r, k) => flowPoint(r, f[k]));
+  return { flowNet: pts.map((p) => p.flowNet), flowCvd: pts.map((p) => p.flowCvd) };
 }
 
 function setWatermark() {
@@ -269,6 +316,7 @@ function draw() {
   if (Object.keys(optional).length) {
     const cols = {};
     for (const r of vb) for (const [k, p] of Object.entries(optionalPoints(r))) (cols[k] ||= []).push(p);
+    if (optional.flowNet) Object.assign(cols, flowPoints(vb));
     for (const [k, s] of Object.entries(optional)) s.setData(cols[k] || []);
   }
   drawCompare();
@@ -316,6 +364,11 @@ function appendBar(k) {
   if (state.settings.chartType === 'line') vLine.update(lineData([r])[0]);
   vUrg.update(urgencyPoint(r));
   for (const [key, p] of Object.entries(optionalPoints(r))) optional[key].update(p);
+  if (optional.flowNet) {
+    const f = flowStep(bars(), k, state.flow?.[k - 1]);
+    (state.flow ||= [])[k] = f;
+    for (const [key, p] of Object.entries(flowPoint(r, f))) optional[key].update(p);
+  }
   const before = state.candles.length;
   state.candles = aggregate(state.view.minutes, state.tf, lastTime());
   for (let j = Math.max(0, before - 1); j < state.candles.length; j++) {
@@ -707,6 +760,11 @@ const showDetails = perFrame((barIdx, candleIdx) => {
   $('legend-urg').innerHTML = `<span class="title">Urgency Index</span>` + kv('', fmt(r[B.UIDX], 0), lcls) + kv('', lv, lcls);
   if (state.layers.fill) $('legend-fill').innerHTML = `<span class="title">Fill time</span>` + kv('', `${fmt(r[B.FILL], 1)}m`) + kv('normal', `${fmt(r[B.BASE], 1)}m`) + kv('VPIN', fmt(r[B.VPIN], 2), 'blue');
   if (state.layers.aai) $('legend-aai').innerHTML = `<span class="title">Absorption</span>` + kv('', fmt(r[B.AAIS], 2));
+  if (state.layers.flow) {
+    const f = state.flow?.[barIdx ?? state.upto - 1];
+    const tag = f?.kind === 'acc' ? kv('', 'Accumulation · net buying, price held', 'up') : f?.kind === 'dist' ? kv('', 'Distribution · net selling, price held', 'down') : '';
+    $('legend-flow').innerHTML = `<span class="title">Flow</span>` + (f ? kv('net', `${f.net >= 0 ? '+' : ''}${fmt(f.net * 100, 0)}%`, f.net >= 0 ? 'up' : 'down') + kv('cum. delta', shares(f.cvd)) + tag : '');
+  }
   $('legend-time').innerHTML = `<span class="title">${state.symbol} · ${state.tf}m</span>` + (c
     ? kv('O', fmt(c[1]), cc) + kv('H', fmt(c[2]), cc) + kv('L', fmt(c[3]), cc) + kv('C', fmt(c[4]), cc) + kv('Vol', inr(c[5])) + (c[6] ? '' : kv('', 'forming'))
     : kv('', 'waiting for the first minute'));
@@ -727,7 +785,7 @@ const showDetails = perFrame((barIdx, candleIdx) => {
 });
 
 function placeLegends() {
-  const ids = ['legend-vol', 'legend-urg', ...(state.layers.fill ? ['legend-fill'] : []), ...(state.layers.aai ? ['legend-aai'] : [])];
+  const ids = ['legend-vol', 'legend-urg', ...(state.layers.fill ? ['legend-fill'] : []), ...(state.layers.aai ? ['legend-aai'] : []), ...(state.layers.flow ? ['legend-flow'] : [])];
   let top = 0;
   volChart.panes().forEach((p, i) => { if (ids[i]) $(ids[i]).style.top = `${top + 8}px`; top += p.getHeight() + 1; });
 }
@@ -1089,7 +1147,7 @@ document.querySelectorAll('.settings-tabs [data-tab]').forEach((b) => b.addEvent
 $('settings-reset').addEventListener('click', () => {
   state.settings = { ...DEFAULT_SETTINGS };
   setDensity('standard');
-  Object.assign(state.layers, { compare: true, shade: true, fill: false, aai: false, hollow: false });
+  Object.assign(state.layers, { compare: true, shade: true, fill: false, aai: false, flow: true, hollow: false });
   applyLayers();
   applySettings();
 });

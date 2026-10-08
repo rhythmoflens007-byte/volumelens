@@ -6,7 +6,7 @@
 // candle even when earlier sessions are loaded in front of them. Horizontal lines are native
 // price lines on both charts, since both share the price axis.
 
-import { B, clamp, fmt, shares, store, lastAtOrBefore, xAt } from './util.js?v=50';
+import { B, clamp, fmt, shares, store, lastAtOrBefore, xAt } from './util.js?v=51';
 
 const TOOLS = ['cursor', 'hline', 'trend', 'zone', 'measure'];
 

@@ -66,7 +66,7 @@ def _rows(day: pd.DataFrame) -> list:
     return [[int(r.end) + C.IST_OFFSET_SECONDS, int(r.start) + C.IST_OFFSET_SECONDS,
              _r(r.open), _r(r.high), _r(r.low), _r(r.close), int(r.volume),
              _r(r.fill_min, 2), _r(r.fill_smooth, 2), _r(r.baseline_min, 2), _r(r.pace, 3), _r(r.urgency, 1),
-             SPEED[r.speed], _r(r.vpin, 3), _r(r.aai_smooth, 2)]
+             SPEED[r.speed], _r(r.vpin, 3), _r(r.aai_smooth, 2), int(r.buy_vol)]
             for r in day.itertuples()]
 
 

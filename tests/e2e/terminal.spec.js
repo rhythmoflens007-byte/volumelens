@@ -204,14 +204,18 @@ test('unfold: clicking a time candle reveals the volume candles inside it', asyn
 test('layers, theme, scanner and session list', async ({ page }) => {
   await open(page);
   await page.click('#layers summary');
+  expect(await page.evaluate(() => window.vl.volChart.panes().length)).toBe(3);         // flow pane is on by default
+  await expect(page.locator('#legend-flow')).toContainText('Flow');
   await page.check('[data-layer="fill"]');
   await page.check('[data-layer="aai"]');
-  expect(await page.evaluate(() => window.vl.volChart.panes().length)).toBe(4);
+  expect(await page.evaluate(() => window.vl.volChart.panes().length)).toBe(5);
   await expect(page.locator('#legend-fill')).toBeVisible();
   await expectLegendsPlaced(page);
   await page.uncheck('[data-layer="fill"]');
   await page.uncheck('[data-layer="aai"]');
+  await page.uncheck('[data-layer="flow"]');
   expect(await page.evaluate(() => window.vl.volChart.panes().length)).toBe(2);
+  await page.check('[data-layer="flow"]');
   await page.check('[data-layer="hollow"]');
   await page.uncheck('[data-layer="hollow"]');
   await page.uncheck('[data-layer="compare"]');
@@ -238,7 +242,7 @@ test('chart types: Volume Bricks follow the Renko rule, candles and line draw th
     const data = volChart.panes()[0].getSeries()[0].data();
     let continuous = true;
     for (let k = 1; k < b.length; k++) {
-      const sameSession = b[k][15] === b[k - 1][15];
+      const sameSession = b[k][16] === b[k - 1][16];
       if (sameSession && data[k].open !== b[k - 1][5]) continuous = false;              // brick starts at the previous close
       if (data[k].close !== b[k][5] || data[k].high !== Math.max(data[k].open, data[k].close)) continuous = false;
     }

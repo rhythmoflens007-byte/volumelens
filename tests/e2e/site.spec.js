@@ -20,7 +20,7 @@ test('landing: the hero animation turns time candles into urgent bricks, then li
   expect(n).toBeGreaterThan(Number(await page.locator('#f-candles').textContent()));          // the burst: more bricks than candles
   await page.screenshot({ path: `test-results/screens/${info.project.name}-landing.png` });
   await page.click('.hero .btn.primary');
-  await page.waitForURL(/terminal\.html/);
+  await page.waitForURL(/\/terminal(\.html)?/);                          // Vercel serves it as /terminal
   await page.waitForFunction(() => document.getElementById('state-overlay')?.classList.contains('hidden'));
 });
 
@@ -49,7 +49,7 @@ test('no dead links or buttons: every link resolves, every button does something
   const rows = page.locator('#scanner tbody tr[data-href]');
   expect(await rows.count()).toBe(11);
   await rows.first().locator('td').nth(2).click();                         // a whole row opens that stock
-  await page.waitForURL(/terminal\.html#\w+/);
+  await page.waitForURL(/\/terminal(\.html)?#\w+/);
   const sym = decodeURIComponent(new URL(page.url()).hash.slice(1));
   await page.waitForFunction(() => document.getElementById('state-overlay')?.classList.contains('hidden'));
   await expect(page.locator('#symbol-input')).toHaveValue(sym);

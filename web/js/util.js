@@ -1,7 +1,7 @@
 // Shared constants and small helpers.
 
 // Column layout of a volume candle row, as written by run.py (+ SESSION added in the browser).
-export const B = { T: 0, START: 1, O: 2, H: 3, L: 4, C: 5, VOL: 6, FILL: 7, FILLS: 8, BASE: 9, PACE: 10, UIDX: 11, SPEED: 12, VPIN: 13, AAIS: 14, SESSION: 15 };
+export const B = { T: 0, START: 1, O: 2, H: 3, L: 4, C: 5, VOL: 6, FILL: 7, FILLS: 8, BASE: 9, PACE: 10, UIDX: 11, SPEED: 12, VPIN: 13, AAIS: 14, BUY: 15, SESSION: 16 };
 export const URGENT = 2;
 export const WATCH = 1;
 export const URGENT_INDEX = 60;
@@ -20,6 +20,7 @@ export const dayLabel = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString
 
 /** Shares in Indian units: 39,60,000 -> "39.6 L", 1,25,00,000 -> "1.25 Cr". */
 export function shares(n) {
+  if (n < 0) return `−${shares(-n)}`;
   if (n >= 1e7) return `${(n / 1e7).toFixed(2)} Cr`;
   if (n >= 1e5) return `${(n / 1e5).toFixed(1)} L`;
   return inr(Math.round(n));
