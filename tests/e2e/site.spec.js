@@ -14,6 +14,7 @@ test.afterEach(async () => { expect(errors, errors.join('\n')).toEqual([]); });
 test('landing: the hero animation turns time candles into urgent bricks, then links to the terminal', async ({ page }, info) => {
   await page.goto('/');
   await expect(page.locator('h1')).toContainText('in a hurry');
+  await page.locator('#hero-canvas').scrollIntoViewIfNeeded();             // the figure plays when it comes into view
   await expect(page.locator('#caption')).toContainText('urgent bricks', { timeout: 15_000 });   // animation reached its end
   await expect(page.locator('#replay')).toBeVisible();
   const n = Number(await page.locator('#f-bricks').textContent());
@@ -36,6 +37,7 @@ test('no dead links or buttons: every link resolves, every button does something
     }
   }
   await page.goto('/');
+  await page.locator('#hero-canvas').scrollIntoViewIfNeeded();
   await expect(page.locator('#caption')).toContainText('urgent bricks', { timeout: 15_000 });
   await page.click('#m-time');                                             // back to the time chart
   await expect(page.locator('#m-time')).toHaveAttribute('aria-pressed', 'true', { timeout: 5000 });

@@ -13,28 +13,28 @@ import { B, URGENT, WATCH, URGENT_INDEX, WATCH_INDEX, $, clamp, fmt, inr, hhmm, 
   easeInOut, reducedMotion, store, perFrame, lastAtOrBefore, level, TH, mix } from './util.js?v=51';
 import { TIMEFRAMES, aggregate } from './timeframe.js?v=51';
 import { loadIndex, Series } from './data.js?v=51';
-import { createTools } from './tools.js?v=51';
-import { SessionSeparators, CompareBands, ClockOverlay, BrickOverlay } from './overlays.js?v=51';
+import { createTools } from './tools.js?v=52';
+import { SessionSeparators, CompareBands, ClockOverlay, BrickOverlay } from './overlays.js?v=52';
 import { initAnalyst } from './analyst.js?v=51';
 
 const LWC = window.LightweightCharts;
 
 const THEMES = {
   dark: {
-    bg: '#0b0d12', text: '#8b92a0', grid: '#131720', line: '#222835', neutral: '#3a404d', smooth: '#e3e6ec',
-    up: '#1fa37a', down: '#e5484d', accent: '#ff9800', watch: '#8a5a12', blue: '#4c7dff', aai: '#b07cff',
-    volUp: 'rgba(31,163,122,0.28)', volDown: 'rgba(229,72,77,0.28)', shade: 'rgba(255,152,0,0.11)', hover: 'rgba(76,125,255,0.16)',
-    cross: '#5b6270', label: '#2a303c', draw: '#e3e6ec', zoneFill: 'rgba(76,125,255,0.10)', zoneLine: 'rgba(76,125,255,0.6)',
-    separator: 'rgba(139,146,160,0.28)', chip: 'rgba(23,27,36,0.9)', chipText: '#9aa1ae', watermark: 'rgba(139,146,160,0.07)',
-    band: 'rgba(139,146,160,0.055)', bandText: 'rgba(139,146,160,0.55)', calm: '#4a505d', hot: '#ff5a1f',
+    bg: '#0a0b0e', text: '#858b96', grid: '#14161b', line: '#22252d', neutral: '#3a3e47', smooth: '#f2f3f5',
+    up: '#30d158', down: '#ff453a', accent: '#ff9f0a', watch: '#8a5a10', blue: '#64a8ff', aai: '#bf8bff',
+    volUp: 'rgba(48,209,88,0.25)', volDown: 'rgba(255,69,58,0.25)', shade: 'rgba(255,159,10,0.1)', hover: 'rgba(100,168,255,0.14)',
+    cross: '#5b606b', label: '#2a2d35', draw: '#f2f3f5', zoneFill: 'rgba(100,168,255,0.10)', zoneLine: 'rgba(100,168,255,0.6)',
+    separator: 'rgba(133,139,150,0.28)', chip: 'rgba(17,19,24,0.9)', chipText: '#a3a9b4', watermark: 'rgba(133,139,150,0.07)',
+    band: 'rgba(133,139,150,0.055)', bandText: 'rgba(133,139,150,0.6)', calm: '#4a4e57', hot: '#ff6a1f',
   },
   light: {
-    bg: '#f6f7f9', text: '#5b6270', grid: '#eceff3', line: '#e2e5ea', neutral: '#c9ced6', smooth: '#11141b',
-    up: '#0f8a63', down: '#d93036', accent: '#e07c00', watch: '#eab676', blue: '#2f5fe0', aai: '#7c4dff',
-    volUp: 'rgba(15,138,99,0.22)', volDown: 'rgba(217,48,54,0.22)', shade: 'rgba(224,124,0,0.12)', hover: 'rgba(47,95,224,0.14)',
-    cross: '#8a909c', label: '#5b6270', draw: '#11141b', zoneFill: 'rgba(47,95,224,0.08)', zoneLine: 'rgba(47,95,224,0.55)',
-    separator: 'rgba(91,98,112,0.3)', chip: 'rgba(255,255,255,0.92)', chipText: '#4b5260', watermark: 'rgba(91,98,112,0.07)',
-    band: 'rgba(91,98,112,0.06)', bandText: 'rgba(91,98,112,0.7)', calm: '#aab0ba', hot: '#d84315',
+    bg: '#fbfbfd', text: '#6e6e73', grid: '#efeff3', line: '#e3e3e8', neutral: '#c7c7cc', smooth: '#1d1d1f',
+    up: '#1a8f4e', down: '#d92d20', accent: '#e8710a', watch: '#f0b878', blue: '#0a66d8', aai: '#7c4dff',
+    volUp: 'rgba(26,143,78,0.2)', volDown: 'rgba(217,45,32,0.2)', shade: 'rgba(232,113,10,0.12)', hover: 'rgba(10,102,216,0.12)',
+    cross: '#8e8e93', label: '#6e6e73', draw: '#1d1d1f', zoneFill: 'rgba(10,102,216,0.08)', zoneLine: 'rgba(10,102,216,0.55)',
+    separator: 'rgba(110,110,115,0.3)', chip: 'rgba(255,255,255,0.92)', chipText: '#4a4a50', watermark: 'rgba(110,110,115,0.07)',
+    band: 'rgba(110,110,115,0.06)', bandText: 'rgba(110,110,115,0.7)', calm: '#aeaeb2', hot: '#d84315',
   },
 };
 const DENSITY_LABEL = { fine: 'Small', standard: 'Medium', coarse: 'Large' };
@@ -68,7 +68,7 @@ function chartOptions() {
     autoSize: true,
     layout: {
       background: { type: 'solid', color: t.bg }, textColor: t.text, fontSize: 11,
-      fontFamily: "'JetBrains Mono', ui-monospace, monospace", attributionLogo: false,
+      fontFamily: "'Geist Mono', ui-monospace, monospace", attributionLogo: false,
       panes: { separatorColor: t.line, separatorHoverColor: t.line, enableResize: true },
     },
     grid: { vertLines: { color: t.grid }, horzLines: { color: t.grid } },
@@ -1184,12 +1184,12 @@ function snapshot() {
   g.fillStyle = t.bg; g.fillRect(0, 0, out.width, out.height);
   g.drawImage(main, 0, head);
   if (comp) g.drawImage(comp, 0, head + main.height, main.width, compH);
-  g.fillStyle = state.theme === 'dark' ? '#e3e6ec' : '#11141b';
-  g.font = `600 ${15 * scale}px "IBM Plex Sans", sans-serif`;
+  g.fillStyle = state.theme === 'dark' ? '#f2f3f5' : '#1d1d1f';
+  g.font = `600 ${15 * scale}px "Schibsted Grotesk", sans-serif`;
   g.fillText(`VolumeLens · ${state.symbol} · ${TYPE_NAME[state.settings.chartType]} · ${DENSITY_LABEL[state.density]} box`, 16 * scale, 28 * scale);
-  g.fillStyle = t.accent; g.font = `500 ${12 * scale}px "JetBrains Mono", monospace`; g.textAlign = 'right';
+  g.fillStyle = t.accent; g.font = `500 ${12 * scale}px "Geist Mono", monospace`; g.textAlign = 'right';
   g.fillText(`${$('day-label').textContent} · urgency ${$('day-score').textContent}`, out.width - 16 * scale, 28 * scale);
-  g.textAlign = 'left'; g.fillStyle = t.text; g.font = `400 ${11 * scale}px "IBM Plex Sans", sans-serif`;
+  g.textAlign = 'left'; g.fillStyle = t.text; g.font = `400 ${11 * scale}px "Schibsted Grotesk", sans-serif`;
   g.fillText('Volume candles: one candle per fixed number of shares. Amber = urgent. Educational, not investment advice. Charting by TradingView Lightweight Charts.', 16 * scale, out.height - 9 * scale);
   const a = document.createElement('a');
   a.download = `VolumeLens_${state.symbol}_${shownSession || 'chart'}.png`;

@@ -39,7 +39,7 @@ class DrawingLayer {
       if (this.flash) {
         const x0 = this.toX(this.flash.t0, -0.5), x1 = this.toX(this.flash.t1, 0.5);
         if (x0 != null && x1 != null) {
-          ctx.fillStyle = `rgba(255, 152, 0, ${0.16 * this.flash.alpha})`;
+          ctx.fillStyle = `rgba(255, 159, 10, ${0.16 * this.flash.alpha})`;
           ctx.fillRect(x0, 0, Math.max(2, x1 - x0), mediaSize.height);
         }
       }
@@ -67,7 +67,7 @@ class DrawingLayer {
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke();
       ctx.setLineDash([]);
       const lines = this.label ? this.label(m.a, m.b) : [];
-      ctx.font = '500 11px "JetBrains Mono", monospace';
+      ctx.font = '500 11px "Geist Mono", monospace';
       const w = Math.max(...lines.map((s) => ctx.measureText(s).width)) + 16, h = lines.length * 15 + 10;
       let bx = b[0] + 10;
       if (bx + w > mediaSize.width - 4) bx = b[0] - w - 10;

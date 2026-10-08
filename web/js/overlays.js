@@ -20,7 +20,7 @@ export class SessionSeparators extends Primitive {
   _draw(target) {
     target.useMediaCoordinateSpace(({ context: ctx, mediaSize }) => {
       const ts = this.chart.timeScale(), c = this.colors();
-      ctx.font = '500 10.5px "JetBrains Mono", monospace';
+      ctx.font = '500 10.5px "Geist Mono", monospace';
       let lastLabelX = -1e9;
       for (const s of this.starts) {
         if (s.index === 0) continue;
@@ -80,7 +80,7 @@ export class ClockOverlay extends Primitive {
       const i0 = Math.max(0, Math.floor(r.from)), i1 = Math.min(n - 1, Math.ceil(r.to));
       if (i1 < i0) return;
       const spacing = ts.options().barSpacing;
-      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.font = '500 10px "Geist Mono", monospace';
       ctx.textAlign = 'center';
       if (bands) {
         const L = bandMin * 60, slot = (k) => Math.floor(b[k][B.START] / L);
@@ -183,7 +183,7 @@ export class BrickOverlay extends Primitive {
         ctx.strokeStyle = c.accent; ctx.setLineDash([3, 3]); ctx.lineWidth = 1;
         ctx.strokeRect(Math.round(x - bw / 2) + 0.5, Math.round(top) + 0.5, Math.round(bw), Math.round(h));
         ctx.setLineDash([]);
-        ctx.font = '500 10.5px "JetBrains Mono", monospace'; ctx.textAlign = 'left';
+        ctx.font = '500 10.5px "Geist Mono", monospace'; ctx.textAlign = 'left';
         const label = `${Math.round(forming.frac * 100)}% · ${forming.minutes} min`;
         const tw = ctx.measureText(label).width + 10;
         ctx.fillStyle = c.chip; ctx.fillRect(x + bw / 2 + 6, top + h / 2 - 9, tw, 18);

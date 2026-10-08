@@ -115,4 +115,4 @@ and next steps are in the [model card](docs/MODEL_CARD.md).
 ## License
 
 Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE) (TradingView Lightweight Charts™,
-IBM Plex Sans, JetBrains Mono). Educational project, not investment advice.
+Schibsted Grotesk, Geist Mono). Educational project, not investment advice.

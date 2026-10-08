@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VolumeLens · Research</title>
 <meta name="description" content="How VolumeLens builds Volume Bricks and the Urgency Index, how it was tested, and what it does not claim.">
-<meta name="theme-color" content="#f5f2eb">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect x='2' y='6' width='3' height='8' rx='1' fill='%2316150f'/%3E%3Crect x='6.5' y='2' width='3' height='12' rx='1' fill='%23b4410f'/%3E%3Crect x='11' y='8' width='3' height='6' rx='1' fill='%2316150f'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="css/site.css?v=3">
+<meta name="theme-color" content="#0a0b0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%230a0b0e'/%3E%3Crect x='3' y='7' width='2.4' height='6' rx='.8' fill='%23f2f3f5'/%3E%3Crect x='6.8' y='3' width='2.4' height='10' rx='.8' fill='%23ff9f0a'/%3E%3Crect x='10.6' y='8.5' width='2.4' height='4.5' rx='.8' fill='%23f2f3f5'/%3E%3C/svg%3E">
+<link rel="preload" href="fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css?v=6">
 </head>
 <body>
 
@@ -24,8 +25,8 @@
 
 <main class="wrap">
   <div class="doc">
-    <div class="meta reveal"><span><b>Research note</b></span><span>September 2026</span><span>Team 53 · HITS</span></div>
-    <h1 class="reveal d1">Volume-Normalized Market Representation for Quantitative Detection of Price–Flow Anomalies</h1>
+    <div class="meta reveal"><span><b>Research note</b></span><span>September 2026</span><span>NSE equities</span></div>
+    <h1 class="grad reveal d1">Volume-Normalized Market Representation for Quantitative Detection of Price–Flow Anomalies</h1>
     <p class="sub reveal d2">How the charts are built, how the urgency signal was tested, and what it does not claim. Team 53, Hindustan Institute of Technology &amp; Science.</p>
     <div class="toc reveal d3"><a class="btn small" href="#method">Method</a><a class="btn small" href="#results">Results</a><a class="btn small" href="#limits">Limits</a><a class="btn small" href="#reproduce">Reproduce</a></div>
   </div>
@@ -92,20 +93,21 @@ Urgency    = max(0, 1 − pace) × 100          urgent ≥ 60 · watch ≥ 30</d
 python backtest.py            # walk-forward validation, bootstrap intervals
 python -m pytest -q           # 16 engine and live tests
 npx playwright test           # browser checks in Edge and Chrome</div>
-      <div class="cta" style="justify-content:flex-start"><a class="btn primary" href="terminal.html">Open the terminal</a><a class="btn" href="index.html">Back to home</a></div>
+      <div class="cta"><a class="btn primary" href="terminal.html">Open the terminal</a><a class="btn" href="index.html">Back to home</a></div>
     </section>
   </div>
 </main>
 
 <footer>
   <div class="wrap">
-    <span>VolumeLens · Team 53, Hindustan Institute of Technology &amp; Science</span>
+    <span>© 2026 VolumeLens</span>
+    <span>Built by Team 53, Hindustan Institute of Technology &amp; Science</span>
     <span class="sp"></span>
     <span>Educational tool, not investment advice</span>
     <a href="https://www.tradingview.com/" target="_blank" rel="noopener">Charting by TradingView Lightweight Charts™</a>
   </div>
 </footer>
 
-<script type="module" src="js/site.js?v=3"></script>
+<script type="module" src="js/site.js?v=5"></script>
 </body>
 </html>

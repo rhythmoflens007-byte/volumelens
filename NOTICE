@@ -7,8 +7,8 @@ TradingView Lightweight Charts(TM)  (web/vendor/lightweight-charts.standalone.pr
   Copyright 2023 TradingView, Inc. Licensed under the Apache License, Version 2.0.
   https://www.tradingview.com/  -  attribution is shown in the application footer.
 
-IBM Plex Sans (web/fonts/)       Copyright IBM Corp. SIL Open Font License 1.1.
-JetBrains Mono (web/fonts/)      Copyright JetBrains s.r.o. SIL Open Font License 1.1.
+Schibsted Grotesk (web/fonts/)   Copyright 2023 The Schibsted-Grotesk Project Authors. SIL Open Font License 1.1.
+Geist Mono (web/fonts/)          Copyright 2024 The Geist Project Authors. SIL Open Font License 1.1.
 
 Market data: 1-minute NSE candles obtained through the AngelOne SmartAPI. The data is included
 for research and demonstration only; check your data provider's terms before redistributing it.

@@ -20,7 +20,7 @@ if (canvas) hero(canvas);
 async function hero(cv) {
   let d;
   try { d = await (await fetch('data/hero.json')).json(); } catch (e) { return; }
-  const C = { up: '#177a5b', down: '#c23b3f', accent: '#b4410f', hot: '#8f2f06', grid: '#e6e0d3', text: '#6f6b61', bg: '#fbf9f4' };
+  const C = { up: '#30d158', down: '#ff453a', accent: '#ff9f0a', grid: '#1b1e25', text: '#7d838e', bg: '#0e1014' };   // matches --plot in site.css
   const ctx = cv.getContext('2d');
   const caption = document.getElementById('caption'), replay = document.getElementById('replay');
   const mTime = document.getElementById('m-time'), mVol = document.getElementById('m-vol');
@@ -53,7 +53,7 @@ async function hero(cv) {
   const hhmm = (t) => `${String(Math.floor(t / 3600) % 24).padStart(2, '0')}:${String(Math.floor(t / 60) % 60).padStart(2, '0')}`;
 
   function axes() {
-    ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.fillStyle = C.text; ctx.font = '500 10.5px "JetBrains Mono", monospace';
+    ctx.strokeStyle = C.grid; ctx.lineWidth = 1; ctx.fillStyle = C.text; ctx.font = '500 10.5px "Geist Mono", ui-monospace, monospace';
     const step = (hi - lo) / 4;
     for (let k = 0; k <= 4; k++) {
       const p = lo + step * k, y = Math.round(Y(p)) + 0.5;
@@ -95,7 +95,7 @@ async function hero(cv) {
       const top = Y(Math.max(o, c)), h = Math.max(3, Math.abs(Y(o) - Y(c)));
       ctx.globalAlpha = alpha;
       if (sp === 2 && glow > 0) {
-        ctx.save(); ctx.shadowColor = 'rgba(180,65,15,0.45)'; ctx.shadowBlur = 10 * glow; ctx.fillStyle = `rgba(180,65,15,${0.22 * glow})`;
+        ctx.save(); ctx.shadowColor = 'rgba(255,159,10,0.55)'; ctx.shadowBlur = 14 * glow; ctx.fillStyle = `rgba(255,159,10,${0.2 * glow})`;
         ctx.fillRect(x - w / 2, top - 1, w, h + 2); ctx.restore(); ctx.globalAlpha = alpha;
       }
       ctx.fillStyle = body;
@@ -186,8 +186,8 @@ if (market) {
     const clock = `${String(ist.getHours()).padStart(2, '0')}:${String(ist.getMinutes()).padStart(2, '0')}`;
     market.classList.toggle('open', open);
     document.getElementById('market-text').textContent = open
-      ? `NSE is open (${clock} IST). Bricks print live in the terminal as shares trade.`
-      : `NSE is closed (${clock} IST). It opens at 09:15 IST, Monday to Friday. Every recorded session is available now.`;
+      ? `NSE is open · ${clock} IST. Bricks print live as shares trade.`
+      : `NSE is closed · ${clock} IST. Opens 09:15 IST, Monday to Friday.`;
     document.getElementById('market-link').textContent = open ? 'Watch it live →' : 'Explore recorded sessions →';
   };
   update();
