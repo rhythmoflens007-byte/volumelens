@@ -19,16 +19,21 @@ for (const line of (fs.existsSync(path.join(ROOT, '.env')) ? fs.readFileSync(pat
 const analyst = require('./api/analyst.js');
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ico': 'image/x-icon' };
+  '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json', '.xml': 'application/xml', '.txt': 'text/plain; charset=utf-8' };
 
 function serveStatic(req, res) {
-  let rel = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  let rel;
+  try { rel = decodeURIComponent(new URL(req.url, 'http://x').pathname); } catch { res.statusCode = 400; return res.end(); }
   if (rel.endsWith('/')) rel += 'index.html';
   let file = path.join(WEB, path.normalize(rel));
   if (!file.startsWith(WEB)) { res.statusCode = 403; return res.end(); }
   if (!path.extname(file) && fs.existsSync(`${file}.html`)) file += '.html';      // clean URLs, as on Vercel
   fs.readFile(file, (err, buf) => {
-    if (err) { res.statusCode = 404; return res.end('Not found'); }
+    if (err) {                                                                     // like Vercel: the site's own 404 page
+      res.statusCode = 404; res.setHeader('Content-Type', TYPES['.html']);
+      return fs.createReadStream(path.join(WEB, '404.html')).on('error', () => res.end('Not found')).pipe(res);
+    }
     res.setHeader('Content-Type', TYPES[path.extname(file)] || 'application/octet-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.end(buf);

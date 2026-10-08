@@ -4,22 +4,36 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>VolumeLens · See when the market is in a hurry</title>
-<meta name="description" content="VolumeLens charts NSE stocks every N shares instead of every N minutes, so urgency, accumulation and distribution show up the moment they start.">
+<meta name="description" content="Ordinary charts tick by the clock. VolumeLens ticks by shares traded, so you see the rush the moment it starts. Free for NSE stocks.">
+<link rel="canonical" href="https://volumelens.vercel.app/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="VolumeLens">
+<meta property="og:url" content="https://volumelens.vercel.app/">
 <meta property="og:title" content="VolumeLens · See when the market is in a hurry">
-<meta property="og:description" content="Charts that tick by shares, not minutes. Volume Bricks, an Urgency Index, flow and an AI analyst for NSE stocks.">
+<meta property="og:description" content="Charts that tick by shares, not minutes. Free for NSE stocks.">
+<meta property="og:image" content="https://volumelens.vercel.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="VolumeLens: a RELIANCE chart where urgent bricks glow amber.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://volumelens.vercel.app/og.png">
 <meta name="theme-color" content="#0a0b0e">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='4' fill='%230a0b0e'/%3E%3Crect x='3' y='7' width='2.4' height='6' rx='.8' fill='%23f2f3f5'/%3E%3Crect x='6.8' y='3' width='2.4' height='10' rx='.8' fill='%23ff9f0a'/%3E%3Crect x='10.6' y='8.5' width='2.4' height='4.5' rx='.8' fill='%23f2f3f5'/%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="site.webmanifest">
 <link rel="preload" href="fonts/schibsted-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/site.css?v=6">
+<link rel="preload" href="fonts/geist-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css?v=9">
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
 <header class="nav" id="nav">
   <div class="wrap">
     <a class="brand" href="index.html" aria-label="VolumeLens home"><svg viewBox="0 0 16 16" aria-hidden="true"><rect x="2" y="6" width="3" height="8" rx="1"/><rect class="hot" x="6.5" y="2" width="3" height="12" rx="1"/><rect x="11" y="8" width="3" height="6" rx="1"/></svg>VolumeLens</a>
     <nav class="nav-links" aria-label="Site">
       <a href="#method" class="hide-sm">How it works</a>
-      <a href="#today" class="hide-sm">Latest session</a>
+      <a href="#today" class="hide-sm">Last session</a>
       <a href="#evidence" class="hide-sm">Evidence</a>
       <a href="research.html">Research</a>
     </nav>
@@ -27,37 +41,40 @@
   </div>
 </header>
 
-<main>
+<main id="main">
   <section class="hero wrap">
-    <p class="eyebrow reveal">Volume-clock charting · NSE equities</p>
-    <h1 class="grad reveal d1">See when the market is <em>in a hurry.</em></h1>
-    <p class="lead reveal d2">Time charts give a quiet minute and a frantic minute the same candle. VolumeLens draws a brick every time a fixed number of shares trade, so urgency, accumulation and distribution show up the moment they start.</p>
-    <div class="cta reveal d3"><a class="btn primary" href="terminal.html">Open the terminal <span class="arr" aria-hidden="true">→</span></a><a class="btn" href="#method">See how it works</a></div>
+    <p class="eyebrow rise">A new kind of chart · NSE</p>
+    <h1 class="grad rise r1">See when the market is <em>in a hurry.</em></h1>
+    <p class="lead rise r2">Ordinary charts tick by the clock. VolumeLens ticks by shares traded. So when the market rushes, you see it as it starts. Not after.</p>
+    <div class="cta rise r3"><a class="btn primary" href="terminal.html">Open the terminal <span class="arr" aria-hidden="true">→</span></a><a class="btn" href="#method">How it works</a></div>
+    <p class="micro rise r3">Free. No sign-up. Works on your phone.</p>
 
-    <figure class="stage reveal d2" aria-label="The same 90 minutes of RELIANCE, charted by time and by shares">
-      <div class="fig-head"><span class="fig-no">RELIANCE · 29 Sep 2026 · 09:30–11:00</span><span class="fig-title">The same trades, charted two ways.</span>
-        <span class="mode" role="group" aria-label="Chart the figure by"><button type="button" id="m-time" class="on" aria-pressed="true">By time</button><button type="button" id="m-vol" aria-pressed="false">By shares</button></span></div>
-      <div class="plot"><canvas id="hero-canvas"></canvas></div>
-      <figcaption><p class="caption" id="caption" aria-live="polite">&nbsp;</p><button class="btn small" id="replay" hidden>Play again</button></figcaption>
-    </figure>
+    <div class="stage-wrap">
+      <figure class="stage rise r4" aria-label="The same 90 minutes of RELIANCE, charted by time and by shares">
+        <div class="fig-head"><span class="fig-no">RELIANCE · 29 Sep 2026 · 09:30–11:00</span><span class="fig-title">Same trades. Two charts.</span>
+          <span class="mode" role="group" aria-label="Chart the figure by"><button type="button" id="m-time" class="on" aria-pressed="true">By time</button><button type="button" id="m-vol" aria-pressed="false">By shares</button></span></div>
+        <div class="plot"><canvas id="hero-canvas"></canvas></div>
+        <figcaption><p class="caption" id="caption" aria-live="polite">&nbsp;</p><button class="btn small" id="replay" hidden>Play again</button></figcaption>
+      </figure>
+    </div>
 
     <div class="facts reveal">
-      <div class="fact"><div class="v" id="f-candles">4</div><div class="k">five-minute candles contain the 09:30 burst</div></div>
-      <div class="fact"><div class="v hot" id="f-bricks">10</div><div class="k">urgent bricks in the very same minutes</div></div>
-      <div class="fact"><div class="v">3.8×</div><div class="k">more large moves follow an urgent brick</div></div>
+      <div class="fact"><div class="v" id="f-candles">4</div><div class="k">candles on a normal chart</div></div>
+      <div class="fact"><div class="v hot" id="f-bricks">10</div><div class="k">urgent bricks on VolumeLens, same minutes</div></div>
+      <div class="fact"><div class="v">3.8×</div><div class="k">more big moves after an urgent brick</div></div>
     </div>
   </section>
 
   <section class="block wrap">
     <div class="head center">
       <p class="eyebrow reveal">The problem</p>
-      <h2 class="grad reveal d1">A five-minute candle can hide a thousand urgent trades.</h2>
-      <p class="sub reveal d2">When large orders arrive in a rush, a time chart still prints one candle. It looks calm while the market is not.</p>
+      <h2 class="grad reveal d1">A calm candle can hide a storm.</h2>
+      <p class="sub reveal d2">When orders rush in, a time chart still draws one candle every five minutes. It looks calm. It isn't.</p>
     </div>
     <div class="pair">
-      <div class="card reveal"><span class="label">Time chart</span><h3>One candle every five minutes</h3><p>Ten trades or ten thousand, it prints one candle. Urgency stays invisible until the price has already moved.</p>
+      <div class="card reveal"><span class="label">Time chart</span><h3>Same candle, busy or not.</h3><p>Ten trades or ten thousand, you get one candle. By the time it looks different, the move has happened.</p>
         <div class="ticks" aria-hidden="true"><i style="height:40%"></i><i style="height:46%"></i><i style="height:38%"></i><i style="height:44%"></i><i style="height:42%"></i><i style="height:40%"></i></div></div>
-      <div class="card reveal d1"><span class="label hot">VolumeLens</span><h3>One brick every N shares</h3><p>Busy stretches print many bricks, quiet ones print few. When bricks start filling fast, you see it as it happens.</p>
+      <div class="card reveal d1"><span class="label hot">VolumeLens</span><h3>More bricks when it matters.</h3><p>Busy minutes print many bricks. Quiet ones print few. A rush stands out the moment it starts.</p>
         <div class="ticks hot" aria-hidden="true"><i style="height:30%"></i><i style="height:34%"></i><i class="u" style="height:62%"></i><i class="u" style="height:80%"></i><i class="u" style="height:96%"></i><i class="u" style="height:88%"></i><i class="u" style="height:70%"></i><i style="height:40%"></i><i style="height:32%"></i></div></div>
     </div>
   </section>
@@ -65,18 +82,18 @@
   <section class="block wrap" id="method">
     <div class="head center">
       <p class="eyebrow reveal">How it works</p>
-      <h2 class="grad reveal d1">Four ideas. Nothing hidden.</h2>
-      <p class="sub reveal d2">Every mark on the chart comes from these definitions, computed only from what was known at that moment.</p>
+      <h2 class="grad reveal d1">Four simple ideas.</h2>
+      <p class="sub reveal d2">No black box. Every mark on the chart comes from these, using only what was known at that moment.</p>
     </div>
     <div class="bento">
-      <article class="tile reveal"><span class="n">01 · Box size</span><div class="big">1,20,000<small>shares · RELIANCE</small></div>
-        <h3>Sized for each stock</h3><p>The stock's average daily volume over its previous 20 sessions, divided by 75. Quiet stocks get small boxes, busy ones large.</p></article>
-      <article class="tile reveal d1"><span class="n">02 · Volume brick</span><div class="big">1 brick <small>= N shares traded</small></div>
-        <h3>Price on a volume clock</h3><p>A brick prints every time N shares trade and runs from the previous brick's close to its own. Time stretches when trading rushes.</p></article>
-      <article class="tile reveal"><span class="n">03 · Urgency Index</span><div class="big hot">60+<small>= urgent</small></div>
-        <h3>How fast bricks fill</h3><p>The last three bricks' fill time against normal for that stock and time of day. At 60 they filled 2.5× faster than usual.</p></article>
+      <article class="tile reveal"><span class="n">01 · Brick size</span><div class="big">1,20,000<small>shares · RELIANCE</small></div>
+        <h3>Fair to every stock.</h3><p>Each stock gets its own brick size, based on how much it usually trades.</p></article>
+      <article class="tile reveal d1"><span class="n">02 · Volume clock</span><div class="big">1 brick <small>= N shares</small></div>
+        <h3>A clock made of shares.</h3><p>A new brick every N shares. Busy minutes stretch out. Quiet ones shrink.</p></article>
+      <article class="tile reveal"><span class="n">03 · Urgency</span><div class="big hot">60+<small>= urgent</small></div>
+        <h3>Urgency, as one number.</h3><p>From 0 to 100. Above 60, bricks are filling 2.5× faster than normal.</p></article>
       <article class="tile reveal d1"><span class="n">04 · Flow</span><div class="chips"><span class="chip up">Accumulation</span><span class="chip down">Distribution</span></div>
-        <h3>Volume that price absorbs</h3><p>Net buyer-minus-seller volume over the last ten bricks. When it leans one way but price barely moves, someone is absorbing it.</p></article>
+        <h3>See volume being absorbed.</h3><p>When buying or selling piles up but price won't move, VolumeLens marks it. Green for accumulation. Red for distribution.</p></article>
     </div>
   </section>
 
@@ -84,12 +101,12 @@
     <div class="split">
       <div>
         <p class="eyebrow reveal">AI analyst</p>
-        <h2 class="grad reveal d1">Ask the chart what just happened.</h2>
-        <p class="sub reveal d2">One click turns the candles on screen into a short, plain-English read: where urgency built, where flow was absorbed, what VPIN did.</p>
+        <h2 class="grad reveal d1">Ask your chart what just happened.</h2>
+        <p class="sub reveal d2">One click. Plain English. In seconds.</p>
         <ul class="checks reveal d3">
-          <li>Reads only the numbers in view, so every claim can be checked on the chart.</li>
-          <li>Describes the data. Never buy, sell or price targets.</li>
-          <li>Runs on the server; your key never reaches the browser.</li>
+          <li>It reads only what's on your screen.</li>
+          <li>Every claim can be checked on the chart.</li>
+          <li>It explains. It never tells you to buy or sell.</li>
         </ul>
       </div>
       <div class="panel reveal d2" aria-label="Example AI analyst reply">
@@ -109,13 +126,13 @@
 
   <section class="block wrap" id="today">
     <div class="head">
-      <p class="eyebrow reveal">Latest session</p>
-      <h2 class="grad reveal d1">Where the market was in a hurry.</h2>
-      <p class="sub reveal d2">Share of each stock's volume that traded in urgent bricks on the latest recorded session, and its largest burst. Select a stock to open it in the terminal.</p>
+      <p class="eyebrow reveal">Last session</p>
+      <h2 class="grad reveal d1">Where the market rushed.</h2>
+      <p class="sub reveal d2">How much of each stock's volume traded in a rush, and when the biggest rush hit. Tap a stock to open it.</p>
     </div>
     <div class="table-card reveal">
       <table class="t scan" id="scanner">
-        <thead><tr><th>Stock</th><th>Urgent volume</th><th class="n">Largest burst</th><th class="n">Close</th><th class="n">Change</th></tr></thead>
+        <thead><tr><th>Stock</th><th>Urgent volume</th><th class="n">Biggest rush</th><th class="n">Close</th><th class="n">Change</th></tr></thead>
         <tbody><tr><td colspan="5" class="muted">Loading…</td></tr></tbody>
       </table>
     </div>
@@ -123,36 +140,37 @@
   </section>
 
   <section class="block wrap proof" id="evidence">
-    <p class="eyebrow reveal">Evidence</p>
+    <p class="eyebrow reveal">Does it work?</p>
     <div class="mega reveal d1">3.8×</div>
-    <p class="sub reveal d2">more large moves in the 30 minutes after an urgent brick: <b>31% versus 8%</b>, measured on 74 sessions the model had never seen.</p>
+    <p class="sub reveal d2">more big moves in the next 30 minutes after an urgent brick. <b class="nowrap">31% versus 8%.</b> Tested on 74 sessions the model had never seen.</p>
     <div class="stats">
-      <div class="stat reveal"><div class="v">3.3×</div><p>Outside the opening hour too, so it is not just the open.</p></div>
-      <div class="stat reveal d1"><div class="v">11 / 11</div><p>Stocks where VolumeLens alerts beat VPIN, the classic flow-toxicity measure.</p></div>
-      <div class="stat reveal d2"><div class="v">46%</div><p>Urgent zones that kept their direction. Urgency says a move is coming, not which way.</p></div>
+      <div class="stat reveal"><div class="v">3.3×</div><p>Even outside the first hour of trading.</p></div>
+      <div class="stat reveal d1"><div class="v">11 of 11</div><p>Stocks where it beat VPIN, the classic order-flow measure.</p></div>
+      <div class="stat reveal d2"><div class="v">46%</div><p>Direction is a coin flip. Urgency tells you when, not which way.</p></div>
     </div>
-    <p class="note reveal">Walk-forward backtest on 11 NSE large caps with block-bootstrap intervals. <a href="research.html">Read the full research note →</a></p>
+    <p class="note reveal">Every number, with its method and its limits, is in the <a href="research.html">research note →</a></p>
   </section>
 
   <section class="block wrap">
     <div class="head">
       <p class="eyebrow reveal">The terminal</p>
-      <h2 class="grad reveal d1">A complete charting terminal.</h2>
+      <h2 class="grad reveal d1">Everything you need. Nothing you don't.</h2>
       <div class="status reveal d2" id="market"><span class="pulse"></span><span id="market-text">Checking NSE market hours…</span><a href="terminal.html" id="market-link">Open the terminal →</a></div>
     </div>
     <div class="features">
-      <div class="feature reveal"><span class="n">01</span><h3>Volume Bricks</h3><p>Bricks, candles or an urgency line, in small, medium or large box sizes.</p></div>
-      <div class="feature reveal d1"><span class="n">02</span><h3>Live NSE feed</h3><p>During market hours bricks print as shares trade; the next one fills in front of you.</p></div>
-      <div class="feature reveal d2"><span class="n">03</span><h3>Compare and unfold</h3><p>A 1–30 minute time chart alongside. Click any candle to see the bricks inside it.</p></div>
-      <div class="feature reveal"><span class="n">04</span><h3>Replay</h3><p>Play any session at market pace, showing only what was known at each moment.</p></div>
-      <div class="feature reveal d1"><span class="n">05</span><h3>Flow and accumulation</h3><p>Net flow, cumulative delta and absorption zones in their own pane.</p></div>
-      <div class="feature reveal d2"><span class="n">06</span><h3>Explained alerts</h3><p>Every alert lists its reasons. No black box, no buy or sell calls.</p></div>
+      <div class="feature reveal"><span class="n">01</span><h3>Volume bricks</h3><p>Bricks, candles or a line. Three sizes.</p></div>
+      <div class="feature reveal d1"><span class="n">02</span><h3>Live</h3><p>During market hours, bricks print as shares trade.</p></div>
+      <div class="feature reveal d2"><span class="n">03</span><h3>Compare</h3><p>A normal chart alongside. Click any candle to unfold its bricks.</p></div>
+      <div class="feature reveal"><span class="n">04</span><h3>Replay</h3><p>Relive any session at market pace.</p></div>
+      <div class="feature reveal d1"><span class="n">05</span><h3>Flow</h3><p>Accumulation and distribution, in their own pane.</p></div>
+      <div class="feature reveal d2"><span class="n">06</span><h3>Explained alerts</h3><p>Every alert tells you why.</p></div>
     </div>
   </section>
 
   <section class="final wrap">
     <h2 class="grad reveal">Charts that tick by shares, not minutes.</h2>
     <div class="cta reveal d1"><a class="btn primary" href="terminal.html">Open the terminal <span class="arr" aria-hidden="true">→</span></a><a class="btn" href="research.html">Read the research</a></div>
+    <p class="micro reveal d2">Free. No sign-up.</p>
   </section>
 </main>
 
@@ -167,6 +185,6 @@
   </div>
 </footer>
 
-<script type="module" src="js/site.js?v=5"></script>
+<script type="module" src="js/site.js?v=6"></script>
 </body>
 </html>

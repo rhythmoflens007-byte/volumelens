@@ -93,7 +93,7 @@ then open <http://127.0.0.1:8777/?live=http://localhost:8787>, or put the server
 
 ```bash
 .venv/Scripts/python -m pytest -q      # 16 tests: engine, no-repaint, quality gate, live = batch
-npm install && npx playwright test     # 64 checks in Edge and Chrome, AI analyst included (Gemini stubbed)
+npm install && npx playwright test     # 66 checks in Edge and Chrome, AI analyst included (Gemini stubbed)
 .venv/Scripts/python backtest.py       # walk-forward validation with bootstrap intervals
 ```
 
@@ -109,8 +109,18 @@ and next steps are in the [model card](docs/MODEL_CARD.md).
 ## Deploy
 
 `vercel.json` serves `web/` as a static site with security headers, plus one function,
-`api/analyst.js`, for the AI analyst. Connect the folder or repository in Vercel, no build step, and set
-`GEMINI_API_KEY` in Project Settings → Environment Variables (the key never reaches the browser).
+`api/analyst.js`, for the AI analyst. Only `web/`, `api/` and `vercel.json` are uploaded
+(`.vercelignore`); credentials, raw data and the engine stay on this machine.
+
+Launch checklist:
+
+1. In Vercel → Project Settings → Environment Variables, add `GEMINI_API_KEY` (optional `GEMINI_MODEL`).
+   The key never reaches the browser; the function only answers pages on its own site and allows about
+   10 questions a minute per visitor.
+2. Deploy: `vercel --prod` (or push to the connected repository).
+3. Check the live site with the same browser tests: `BASE_URL=https://volumelens.vercel.app npx playwright test`.
+4. On a custom domain, update the absolute URLs in the page `<head>` tags (canonical, `og:url`,
+   `og:image`), `web/robots.txt` and `web/sitemap.xml`.
 
 ## License
 

@@ -9,6 +9,7 @@ const MODELS = [
 const TIMEOUT_MS = 20000;
 const MAX_CONTEXT = 20000;                            // characters of chart JSON
 const MAX_QUESTION = 300;
+const WINDOW_MS = 60000, MAX_PER_WINDOW = 10;       // per visitor, per server instance: a brake, not a quota
 
 const SYSTEM = `You are the VolumeLens analyst, built into a charting tool for NSE (India) stocks.
 VolumeLens draws a new candle every time a fixed number of shares trade (volume candles), so busy
@@ -26,12 +27,28 @@ stretches print many candles. Its measures:
 Rules:
 - Describe only what the JSON shows. Use its numbers and times; never invent data or news.
 - This is an analytics tool. Never recommend buying, selling or holding, and never give price
-  targets, stop losses or predictions of direction. Asked for those, say in one line that
-  VolumeLens describes flow and does not advise, then describe the data instead.
+  targets, stop losses or predictions of direction. Only when the question asks for those, say in
+  one line that VolumeLens describes flow and does not advise, then describe the data instead.
+  Otherwise add no disclaimer; the page already shows one.
 - Times are IST. Write share counts in Indian units (lakh, crore) and prices in rupees.
 - Reply in 3 to 5 short bullet points starting with "- ", then one line starting "Watch: " naming
   what to keep an eye on in the data (for example whether urgency returns), not a trade.
   At most 130 words. Plain text, with **bold** allowed for key numbers.`;
+
+const hits = new Map();                              // visitor -> request times in the current window
+function limited(ip, now = Date.now()) {
+  const recent = (hits.get(ip) || []).filter((t) => now - t < WINDOW_MS);
+  recent.push(now);
+  hits.set(ip, recent);
+  if (hits.size > 5000) for (const [k, v] of hits) if (now - v[v.length - 1] >= WINDOW_MS) hits.delete(k);
+  return recent.length > MAX_PER_WINDOW;
+}
+const clientIp = (h) => String(h['x-forwarded-for'] || h['x-real-ip'] || 'local').split(',')[0].trim();
+/** Browsers always send Origin on a POST; refuse pages on other sites. (Non-browser callers meet the rate limit.) */
+function sameOrigin(h) {
+  if (!h.origin) return true;
+  try { return new URL(h.origin).host === (h['x-forwarded-host'] || h.host); } catch { return false; }
+}
 
 function send(res, status, body) {
   res.statusCode = status;
@@ -60,6 +77,9 @@ async function ask(model, key, prompt) {
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return send(res, 405, { error: 'Use POST.' });
+  const headers = req.headers || {};
+  if (!sameOrigin(headers)) return send(res, 403, { error: 'The AI analyst only answers the VolumeLens site.' });
+  if (limited(clientIp(headers))) return send(res, 429, { error: 'That is a lot of questions in a minute. Try again shortly.' });
   const key = process.env.GEMINI_API_KEY;
   if (!key) return send(res, 503, { error: 'The AI analyst is not configured (GEMINI_API_KEY is missing).' });
 

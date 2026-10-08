@@ -16,10 +16,11 @@ function stubGemini(...replies) {
 }
 const ok = (text) => [200, { candidates: [{ content: { parts: [{ text }] } }] }];
 
-async function call(body, { method = 'POST', key = 'test-key' } = {}) {
+let visitor = 0;
+async function call(body, { method = 'POST', key = 'test-key', headers = {} } = {}) {
   if (key) process.env.GEMINI_API_KEY = key; else delete process.env.GEMINI_API_KEY;
   const res = { statusCode: 200, headers: {}, setHeader(k, v) { this.headers[k] = v; }, end(s) { this.json = JSON.parse(s); } };
-  await handler({ method, body }, res);
+  await handler({ method, body, headers: { 'x-forwarded-for': `10.0.${process.pid % 250}.${visitor++ % 250}`, ...headers } }, res);
   return res;
 }
 const context = { symbol: 'RELIANCE', view: { from: '2026-09-29 09:15', to: '2026-09-29 15:15', candles: 99 } };
@@ -65,4 +66,17 @@ test('validates the method, the key and the input', async () => {
   expect((await call({ context, question: 'x'.repeat(301) })).statusCode).toBe(400);
   expect((await call({ context: { blob: 'x'.repeat(20001) } })).statusCode).toBe(400);
   expect(calls).toHaveLength(0);
+});
+
+test('answers its own site, refuses other sites, and brakes floods', async () => {
+  stubGemini(ok('- fine'));
+  const own = { origin: 'https://volumelens.vercel.app', host: 'volumelens.vercel.app' };
+  expect((await call({ context }, { headers: own })).statusCode).toBe(200);
+  const other = await call({ context }, { headers: { origin: 'https://evil.example', host: 'volumelens.vercel.app' } });
+  expect(other.statusCode).toBe(403);
+  const ip = { 'x-forwarded-for': `203.0.113.${process.pid % 250}` };
+  const codes = [];
+  for (let i = 0; i < 11; i++) codes.push((await call({ context }, { headers: ip })).statusCode);
+  expect(codes.slice(0, 10).every((c) => c === 200)).toBe(true);
+  expect(codes[10]).toBe(429);
 });

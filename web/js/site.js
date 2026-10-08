@@ -5,21 +5,40 @@
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- reveal on scroll, nav border
+// Content is visible without script; with it, sections below the fold focus-pull in. Anything already
+// on screen is marked shown first, so nothing blinks out and back.
+const reveals = [...document.querySelectorAll('.reveal')];
+for (const el of reveals) if (el.getBoundingClientRect().top < innerHeight * 0.92) el.classList.add('in');
+document.documentElement.classList.add('js');
 const io = new IntersectionObserver((es) => es.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }),
   { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
-document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
+reveals.filter((el) => !el.classList.contains('in')).forEach((el) => io.observe(el));
+
+// cards catch the light under the cursor
+if (matchMedia('(hover: hover)').matches) {
+  for (const el of document.querySelectorAll('.card, .tile, .stat')) {
+    el.addEventListener('pointermove', (e) => {
+      const r = el.getBoundingClientRect();
+      el.style.setProperty('--mx', `${e.clientX - r.left}px`);
+      el.style.setProperty('--my', `${e.clientY - r.top}px`);
+    });
+  }
+}
 const nav = document.getElementById('nav');
 const onScroll = () => nav?.classList.toggle('scrolled', scrollY > 8);
 addEventListener('scroll', onScroll, { passive: true });
 onScroll();
 
-// ---------- hero
+// ---------- hero (one request feeds both the figure and the scanner)
+const heroData = document.getElementById('hero-canvas') || document.getElementById('scanner')
+  ? fetch('data/hero.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); }) : null;
+heroData?.catch(() => {});
 const canvas = document.getElementById('hero-canvas');
 if (canvas) hero(canvas);
 
 async function hero(cv) {
   let d;
-  try { d = await (await fetch('data/hero.json')).json(); } catch (e) { return; }
+  try { d = await heroData; } catch (e) { return; }
   const C = { up: '#30d158', down: '#ff453a', accent: '#ff9f0a', grid: '#1b1e25', text: '#7d838e', bg: '#0e1014' };   // matches --plot in site.css
   const ctx = cv.getContext('2d');
   const caption = document.getElementById('caption'), replay = document.getElementById('replay');
@@ -109,11 +128,11 @@ async function hero(cv) {
   // timeline (ms)
   const T = { candlesIn: [0, 700], burst: [1100, 1700], bricksIn: [2600, 3300], morph: [3600, 5400], glow: [5400, 6200], end: 6400 };
   const CAP = [
-    [0, `A normal 5-minute chart. <b>Looks calm.</b>`],
-    [1100, `The 09:30 burst hides in <b>${burstCandles.size} ordinary candles</b>.`],
-    [2600, `Now the same minutes, one brick every <b>${d.size.toLocaleString('en-IN')} shares</b>…`],
-    [3600, `…laid out by shares traded, not by the clock.`],
-    [5400, `<span class="hot"><b>${urgent.length} urgent bricks</b></span>. The burst was there all along.`],
+    [0, `A normal five-minute chart. <b>Looks calm.</b>`],
+    [1100, `But the 09:30 rush hides inside <b>${burstCandles.size} ordinary candles</b>.`],
+    [2600, `Now the same minutes. One brick every <b>${d.size.toLocaleString('en-IN')} shares</b>…`],
+    [3600, `…drawn by shares traded, not by the clock.`],
+    [5400, `<span class="hot"><b>${urgent.length} urgent bricks</b></span>. The rush was there all along.`],
   ];
   let last = 0, raf = 0, capIdx = -1, run = 0;
   const p = (t, [a, b]) => clamp((t - a) / (b - a));
@@ -162,7 +181,7 @@ async function hero(cv) {
 // ---------- latest-session scanner (rows open the stock in the terminal)
 async function scanner(el) {
   let d;
-  try { d = await (await fetch('data/hero.json')).json(); }
+  try { d = await heroData; }
   catch (e) { el.querySelector('tbody').innerHTML = '<tr><td colspan="5" class="muted">Could not load the latest session.</td></tr>'; return; }
   const rows = d.scanner || [], top = Math.max(1, ...rows.map((r) => r.urgency));
   el.querySelector('tbody').innerHTML = rows.map((r) => `<tr data-href="terminal.html#${r.symbol}">
@@ -172,7 +191,7 @@ async function scanner(el) {
     <td class="n ${r.change >= 0 ? 'up' : 'down'}">${r.change >= 0 ? '+' : ''}${r.change.toFixed(2)}%</td></tr>`).join('');
   el.addEventListener('click', (e) => { const tr = e.target.closest('tr[data-href]'); if (tr && !e.target.closest('a')) location.href = tr.dataset.href; });
   const date = rows[0] ? new Date(`${rows[0].date}T00:00:00`).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
-  document.getElementById('scan-note').textContent = `Session of ${date}, Medium box size. Urgent volume is the share of the day's volume that traded in urgent bricks.`;
+  document.getElementById('scan-note').textContent = `${date} · medium bricks · urgent volume is the share of the day's volume that traded in urgent bricks.`;
 }
 const scan = document.getElementById('scanner');
 if (scan) scanner(scan);
