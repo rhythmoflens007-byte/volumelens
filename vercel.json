@@ -4,7 +4,7 @@
   "installCommand": "",
   "outputDirectory": "web",
   "cleanUrls": true,
-  "functions": { "api/analyst.js": { "maxDuration": 30 } },
+  "functions": { "api/analyst.js": { "maxDuration": 60 } },
   "headers": [
     {
       "source": "/data/(.*)",

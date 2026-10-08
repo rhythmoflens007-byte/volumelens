@@ -6,7 +6,7 @@ const MODELS = [
   { name: process.env.GEMINI_MODEL || 'gemini-3.5-flash', thinking: { thinkingLevel: 'minimal' } },
   { name: 'gemini-flash-lite-latest' },               // fallback when the main model is busy
 ];
-const TIMEOUT_MS = 20000;
+const TIMEOUT_MS = 12000;                             // per model, so both attempts fit in the function's time limit
 const MAX_CONTEXT = 20000;                            // characters of chart JSON
 const MAX_QUESTION = 300;
 const WINDOW_MS = 60000, MAX_PER_WINDOW = 10;       // per visitor, per server instance: a brake, not a quota
