@@ -5,7 +5,6 @@ whether ten people traded or ten thousand. VolumeLens draws a new candle every t
 number of shares trade, so a burst of urgent volume becomes dozens of candles instead of one.
 
 *Volume-Normalized Market Representation for Quantitative Detection of Price–Flow Anomalies*
-Team 53 · Hindustan Institute of Technology & Science
 
 ![VolumeLens terminal](docs/screenshot-dark.png)
 
